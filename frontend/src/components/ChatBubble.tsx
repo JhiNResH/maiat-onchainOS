@@ -9,10 +9,10 @@ interface Message {
 }
 
 const QUICK_PROMPTS = [
-  'Who can audit my smart contract?',
-  'Find me a DeFi routing agent',
-  'Best rated agent for data analysis?',
-  'How does reputation scoring work?',
+  'Evaluate this agent for me',
+  'Who should I hire for an audit?',
+  'Is this agent trustworthy?',
+  'How do you decide to approve a job?',
 ];
 
 // Mock AI responses based on keywords
@@ -21,43 +21,51 @@ function getAIResponse(query: string): string {
 
   if (q.includes('audit') || q.includes('security') || q.includes('vulnerability')) {
     const agent = AGENTS.find(a => a.equippedSkills.some(s => s.includes('Audit') || s.includes('Security')));
-    return `🛡️ For smart contract audits, I recommend **${agent?.name}** (Rep: ${agent?.reputation}/100, ${agent?.feeTier} tier).\n\nThey have ${agent?.completedJobs} completed jobs with a ${agent?.skillRatings['Smart Contract Audit']?.toFixed(1) || '4.9'}★ rating in auditing.\n\n→ [View Profile](/agent/${agent?.address})\n\nThey can detect reentrancy, access control issues, and more. Want me to help you post a job for them?`;
+    return `🛡️ **Evaluator Assessment:**\n\nFor smart contract audits, I'd approve **${agent?.name}** — their trust score is **${agent?.reputation}/100** (${agent?.feeTier} tier).\n\n• ${agent?.completedJobs} jobs completed, ${agent?.skillRatings['Smart Contract Audit']?.toFixed(1) || '4.9'}★ audit rating\n• Zero threat reports on file\n• **Verdict: APPROVED** ✅\n\n→ [View & Hire](/agent/${agent?.address})\n\nIf you post a job for them, I'll verify their score on-chain before releasing escrow.`;
   }
 
   if (q.includes('defi') || q.includes('swap') || q.includes('routing') || q.includes('trade') || q.includes('trading')) {
     const agent = AGENTS.find(a => a.equippedSkills.some(s => s.includes('DeFi') || s.includes('Trading')));
-    return `🔀 For DeFi operations, **${agent?.name}** is your best bet (Rep: ${agent?.reputation}/100, ${agent?.feeTier} tier).\n\nSkills: ${agent?.equippedSkills.join(', ')}\nCompleted: ${agent?.completedJobs} jobs | Earned: ${agent?.totalEarnings} OKB\n\n→ [View Profile](/agent/${agent?.address})\n\nThey specialize in MEV-protected routing and optimal slippage. Fee rate: only ${agent?.feeTier === 'Guardian' ? '1%' : '3%'}!`;
+    return `🔀 **Evaluator Assessment:**\n\nFor DeFi operations, **${agent?.name}** passes my trust threshold.\n\n• Trust Score: **${agent?.reputation}/100** (threshold: 60)\n• Skills: ${agent?.equippedSkills.join(', ')}\n• ${agent?.completedJobs} completed jobs, ${agent?.totalEarnings} OKB earned\n• Fee rate: ${agent?.feeTier === 'Guardian' ? '1%' : '3%'} (${agent?.feeTier})\n• **Verdict: APPROVED** ✅\n\n→ [View & Hire](/agent/${agent?.address})`;
   }
 
   if (q.includes('data') || q.includes('analysis') || q.includes('analytics')) {
-    return `📊 For data analysis, I found 2 agents:\n\n1. **AlphaTrader.eth** — 4.8★ in Data Analysis, Guardian tier (1% fee)\n2. **ContentMaster.ai** — 4.4★ in Data Analysis, Trusted tier (3% fee)\n\nAlphaTrader has higher ratings but is pricier. ContentMaster handles more volume.\n\n→ [Compare on Jobs](/jobs)\n\nWhat kind of analysis do you need? On-chain, market sentiment, or portfolio?`;
+    return `📊 **Evaluator Assessment — 2 candidates:**\n\n**1. AlphaTrader.eth** ✅ APPROVED\n   Score: 92/100 (Guardian) · 4.8★ Data Analysis · 1% fee\n\n**2. ContentMaster.ai** ✅ APPROVED (with note)\n   Score: 75/100 (Trusted) · 4.4★ Data Analysis · 3% fee\n   ⚠️ Lower score — I'd still approve, but AlphaTrader has a stronger track record.\n\n→ [Compare on Jobs](/jobs)\n\nBoth clear my threshold (60), but the quality gap is significant.`;
   }
 
   if (q.includes('content') || q.includes('social') || q.includes('marketing')) {
     const agent = AGENTS.find(a => a.equippedSkills.some(s => s.includes('Content')));
-    return `✍️ For content creation, try **${agent?.name}** (Rep: ${agent?.reputation}/100).\n\nThey've completed ${agent?.completedJobs} content jobs with a ${agent?.skillRatings['Content Creation']?.toFixed(1) || '4.5'}★ rating.\n\n→ [View Profile](/agent/${agent?.address})\n\nThey can handle social media, docs, and marketing content. AI-powered with human-quality output.`;
+    return `✍️ **Evaluator Assessment:**\n\n**${agent?.name}** — Score: **${agent?.reputation}/100**\n\n• ${agent?.completedJobs} content jobs, ${agent?.skillRatings['Content Creation']?.toFixed(1) || '4.5'}★ rating\n• No threat flags\n• **Verdict: APPROVED** ✅\n\n→ [View & Hire](/agent/${agent?.address})\n\nNote: their rep is Trusted tier (3% fee), not Guardian. Solid worker but room to grow.`;
   }
 
-  if (q.includes('reputation') || q.includes('score') || q.includes('fee') || q.includes('how')) {
-    return `📈 **How Maiat Reputation Works:**\n\n1. Complete jobs → get rated (1-5★)\n2. Ratings aggregate into Rep Score (0-100)\n3. Rep determines your fee tier:\n   • 0-49 → New (5% fee)\n   • 50-74 → Trusted (3%)\n   • 75-89 → Verified (2%)\n   • 90+ → Guardian (1%)\n\nHigher rep = lower fees = more profit!\n\nBuyers AND workers rate each other (Airbnb-style mutual reviews).`;
+  if (q.includes('trustworthy') || q.includes('trust') || q.includes('evaluate') || q.includes('check')) {
+    return `⚖️ **How I evaluate agents:**\n\nWhen a job is submitted, I read the worker's trust score from the **TrustScoreOracle** on-chain:\n\n1. Score ≥ ${60} → **COMPLETE** (release escrow) ✅\n2. Score < ${60} → **REJECT** (refund buyer) ❌\n3. Threat reports ≥ 3 → **AUTO-REJECT** 🚫\n4. Uninitialized provider → **REJECT** (no history)\n\nI also check:\n• Score staleness (must be updated within 7 days)\n• Flash manipulation guard (1-hour minimum age)\n\nGive me an agent address and I'll run a pre-check right now.`;
+  }
+
+  if (q.includes('approve') || q.includes('reject') || q.includes('decide') || q.includes('how do you')) {
+    return `⚖️ **My evaluation logic (on-chain):**\n\n\`\`\`\nif (threatReports ≥ 3) → REJECT 🚫 "FLAGGED_AGENT"\nif (!initialized)     → REJECT ❌ "UNINITIALIZED"\nif (score ≥ threshold) → COMPLETE ✅ (release escrow)\nif (score < threshold) → REJECT ❌ "LOW_TRUST_SCORE"\n\`\`\`\n\nI'm deployed as **MaiatEvaluator.sol** — an ERC-8183 Evaluator contract. Every decision is on-chain, transparent, and verifiable.\n\nThe threshold is currently set to **60/100**. Agents below that don't get paid.\n\nThis is what makes Maiat different — reputation has **real economic consequences**.`;
+  }
+
+  if (q.includes('reputation') || q.includes('score') || q.includes('fee')) {
+    return `📈 **Reputation → Economic Consequences:**\n\nI read scores from TrustScoreOracle. Here's what they mean:\n\n| Score | Tier | Fee | My Verdict |\n|-------|------|-----|------------|\n| 90+ | Guardian | 1% | ✅ Auto-approve |\n| 75-89 | Verified | 2% | ✅ Approve |\n| 50-74 | Trusted | 3% | ✅ Approve |\n| 0-49 | New | 5% | ⚠️ Risky — may reject |\n\nBad reputation doesn't just hurt your ego — it directly increases your fees and may get your jobs rejected by me.\n\nThis is "Yelp for Agents" with teeth.`;
   }
 
   if (q.includes('cheapest') || q.includes('cheap') || q.includes('best') || q.includes('top')) {
     const sorted = [...AGENTS].sort((a, b) => b.reputation - a.reputation);
-    return `🏆 **Top Agents by Reputation:**\n\n${sorted.map((a, i) => `${i + 1}. **${a.name}** — Rep ${a.reputation}, ${a.feeTier} (${a.feeTier === 'Guardian' ? '1%' : a.feeTier === 'Verified' ? '2%' : a.feeTier === 'Trusted' ? '3%' : '5%'} fee)\n   Skills: ${a.equippedSkills.join(', ')}`).join('\n\n')}\n\n→ Higher rep = lower platform fees!`;
+    return `🏆 **Evaluator Rankings — by Trust Score:**\n\n${sorted.map((a, i) => `${i + 1}. **${a.name}** — Score ${a.reputation}/100 ${a.reputation >= 60 ? '✅' : '❌'}\n   ${a.feeTier} tier · ${a.feeTier === 'Guardian' ? '1%' : a.feeTier === 'Verified' ? '2%' : a.feeTier === 'Trusted' ? '3%' : '5%'} fee · ${a.equippedSkills.join(', ')}`).join('\n\n')}\n\nAll 3 clear my approval threshold (60). I'd green-light jobs for any of them.`;
   }
 
   if (q.includes('skill') || q.includes('nft') || q.includes('dojo')) {
-    return `🎯 **Skill NFTs on Dojo:**\n\n${SKILLS.slice(0, 4).map(s => `• ${s.icon} **${s.name}** — ${s.price} OKB (${s.royalty}% royalty)\n  ${s.totalBuyers} owners, ${s.rating}★`).join('\n')}\n\n→ [Browse all skills on Dojo](/dojo)\n\nAgents equip skills as NFTs in their TBA (Token Bound Account). Better skills + higher rep = more job opportunities.`;
+    return `🎯 **Skill NFTs (Dojo):**\n\n${SKILLS.slice(0, 4).map(s => `• ${s.icon} **${s.name}** — ${s.price} OKB (${s.royalty}% royalty)\n  ${s.totalBuyers} holders · ${s.rating}★`).join('\n')}\n\n→ [Browse Dojo](/dojo)\n\nSkills are ERC-1155 NFTs equipped to an agent's Token Bound Account (ERC-6551). When I evaluate a job, I can verify the worker actually holds the required skill on-chain.`;
   }
 
-  return `I can help you find the right agent for any job! Try asking:\n\n• "Who can audit my smart contract?"\n• "Best agent for DeFi routing?"\n• "How does reputation scoring work?"\n• "Show me top-rated agents"\n\nOr describe what you need done, and I'll match you with the best agent.`;
+  return `I'm the Maiat Evaluator — I read every agent's on-chain reputation before approving jobs.\n\nTry asking me:\n\n• "Evaluate this agent for me"\n• "Who should I hire for an audit?"\n• "Is this agent trustworthy?"\n• "How do you decide to approve a job?"\n\nDescribe what you need, and I'll evaluate who's most qualified based on their trust score, job history, and skill ratings.`;
 }
 
 export default function ChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: '👋 Hey! I\'m Maiat AI. I can help you find the right agent for any job, explain how the platform works, or recommend agents based on your needs.\n\nWhat are you looking for?' }
+    { role: 'assistant', content: '⚖️ I\'m the **Maiat Evaluator** — the on-chain judge of this platform.\n\nI read every agent\'s trust score, review history, and threat reports before deciding whether a job gets approved or rejected.\n\nNeed to hire someone? Tell me what you need, and I\'ll evaluate who\'s qualified — the same way I evaluate jobs on-chain.' }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -91,13 +99,13 @@ export default function ChatBubble() {
           <div className="flex items-center justify-between px-4 py-3 bg-gray-900 border-b border-gray-800">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-sm">
-                🤖
+                ⚖️
               </div>
               <div>
-                <p className="text-white text-sm font-semibold">Maiat AI</p>
-                <p className="text-emerald-400 text-[10px] flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Online
+                <p className="text-white text-sm font-semibold">Maiat Evaluator</p>
+                <p className="text-amber-400 text-[10px] flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  ERC-8183 · On-Chain
                 </p>
               </div>
             </div>
