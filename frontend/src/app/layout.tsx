@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ChatBubble from "@/components/ChatBubble";
+import { Web3Provider } from "@/lib/web3";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,11 +32,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-gray-950 text-gray-50">
-        <Navbar />
-        <main className="flex-1 pt-16">
-          {children}
-        </main>
-        <Footer />
+        <Web3Provider>
+          <Navbar />
+          <main className="flex-1 pt-16">
+            {children}
+          </main>
+          <Footer />
+          <ChatBubble />
+        </Web3Provider>
       </body>
     </html>
   );

@@ -20,6 +20,9 @@ contract AgentIdentity {
     address public pendingOwner;
     uint256 public nextAgentId = 1;
 
+    /// @dev H-04: Authorized factories that can call registerFor()
+    mapping(address => bool) public authorizedFactories;
+
     struct Agent {
         uint256 agentId;
         string  agentURI;
@@ -35,6 +38,8 @@ contract AgentIdentity {
     event AgentURIUpdated(address indexed wallet, uint256 indexed agentId, string newURI);
     event OwnershipTransferred(address indexed prev, address indexed next);
     event OwnershipTransferProposed(address indexed currentOwner, address indexed proposedOwner);
+    event OwnershipTransferCancelled(address indexed currentOwner); // L-04 fix
+    event FactoryAuthorized(address indexed factory, bool authorized); // H-04
 
     // ── Errors ─────────────────────────────────────────────────────────
     error AlreadyRegistered(address wallet);
@@ -64,10 +69,19 @@ contract AgentIdentity {
     }
 
     // ── Admin-delegated register ───────────────────────────────────────
-    /// @notice Owner registers `wallet` on their behalf.
-    function registerFor(address wallet, string calldata agentURI) external onlyOwner returns (uint256) {
+    /// @notice Owner or authorized factory registers `wallet` on their behalf.
+    /// @dev H-04 fix: accepts both owner and authorized factories
+    function registerFor(address wallet, string calldata agentURI) external returns (uint256) {
+        if (msg.sender != owner && !authorizedFactories[msg.sender]) revert NotOwner();
         if (wallet == address(0)) revert ZeroAddress();
         return _register(wallet, agentURI);
+    }
+
+    /// @notice H-04: Authorize a factory contract to call registerFor()
+    function setAuthorizedFactory(address factory, bool authorized) external onlyOwner {
+        if (factory == address(0)) revert ZeroAddress();
+        authorizedFactories[factory] = authorized;
+        emit FactoryAuthorized(factory, authorized);
     }
 
     // ── AI-03: Update agentURI post-registration ───────────────────────
@@ -137,5 +151,6 @@ contract AgentIdentity {
     /// @notice Cancel pending ownership transfer.
     function cancelOwnershipTransfer() external onlyOwner {
         pendingOwner = address(0);
+        emit OwnershipTransferCancelled(msg.sender); // L-04 fix
     }
 }

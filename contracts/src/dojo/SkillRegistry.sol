@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity 0.8.26;
 
 import "openzeppelin-contracts/contracts/token/ERC1155/ERC1155.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
+import "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title SkillRegistry — Dojo Skill NFT Marketplace
  * @notice ERC-1155 skill NFTs that autonomous workers can purchase.
  *         Creators earn royalties on every sale.
  */
-contract SkillRegistry is ERC1155, Ownable {
+contract SkillRegistry is ERC1155, Ownable, ReentrancyGuard {
     struct Skill {
         address creator;
         string name;
@@ -54,22 +55,24 @@ contract SkillRegistry is ERC1155, Ownable {
     }
 
     /// @notice Buy a skill NFT — payment goes to creator (royalty portion) + protocol
-    function buySkill(uint256 skillId) external payable {
+    /// @dev C-01 fix: ReentrancyGuard + CEI pattern + M-03 fix: royalty on price not msg.value
+    function buySkill(uint256 skillId) external payable nonReentrant {
         Skill storage s = skills[skillId];
         require(s.exists, "skill not found");
         require(!hasSkill[msg.sender][skillId], "already owned");
         require(msg.value >= s.price, "insufficient payment");
 
-        // Mint ERC-1155 token
-        _mint(msg.sender, skillId, 1, "");
-
-        // Track ownership
+        // EFFECTS FIRST (CEI pattern — prevents reentrancy via onERC1155Received)
         hasSkill[msg.sender][skillId] = true;
         _agentSkills[msg.sender].push(skillId);
         s.totalBuyers++;
 
-        // Pay creator royalty
-        uint256 royalty = (msg.value * s.royaltyBps) / 10000;
+        // INTERACTIONS
+        // Mint ERC-1155 token (callback happens here, but state is already updated)
+        _mint(msg.sender, skillId, 1, "");
+
+        // Pay creator royalty (M-03 fix: use s.price, not msg.value)
+        uint256 royalty = (s.price * s.royaltyBps) / 10000;
         if (royalty > 0) {
             (bool ok, ) = s.creator.call{value: royalty}("");
             require(ok, "royalty transfer failed");

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity 0.8.26;
 
 import "./ReputationEngine.sol";
 import "../dojo/SkillRegistry.sol";
@@ -9,9 +9,10 @@ import "../dojo/SkillRegistry.sol";
  * @notice Buyers post jobs, Workers accept & complete them, mutual reviews.
  *         Reputation updates happen automatically via ReputationEngine.
  *         Supports bilateral Airbnb-style reviews (buyer rates worker, worker rates buyer).
+ *         H-02 fix: Job deadlines + reclaim. H-03 fix: Auto-release after rating window.
  */
 contract JobMarket {
-    enum JobStatus { Open, InProgress, Completed, Rated, Cancelled }
+    enum JobStatus { Open, InProgress, Completed, Rated, Cancelled, Expired }
 
     struct Job {
         address buyer;
@@ -23,7 +24,12 @@ contract JobMarket {
         uint8 buyerRating;  // buyer rates worker (1-5, 0 = not rated)
         uint8 workerRating; // worker rates buyer (1-5, 0 = not rated)
         uint256 createdAt;
+        uint256 deadline;     // H-02: job must be completed by this time
+        uint256 completedAt;  // H-03: when worker marked complete (for auto-release timer)
     }
+
+    /// @notice Rating window — buyer has this long to rate after completion before worker can auto-claim
+    uint256 public constant RATING_WINDOW = 3 days;
 
     ReputationEngine public immutable reputationEngine;
     SkillRegistry public immutable skillRegistry;
@@ -34,6 +40,8 @@ contract JobMarket {
     uint256[] private _openJobIds;
     // Track open job index for efficient removal
     mapping(uint256 => uint256) private _openJobIndex;
+    // H-01 fix: Track accumulated protocol fees separately from escrow
+    uint256 public accumulatedFees;
 
     event JobPosted(uint256 indexed jobId, address indexed buyer, string description, uint256 reward, uint256 preferredSkillId);
     event JobAccepted(uint256 indexed jobId, address indexed worker);
@@ -41,19 +49,28 @@ contract JobMarket {
     event BuyerRatedWorker(uint256 indexed jobId, address indexed buyer, address indexed worker, uint8 rating);
     event WorkerRatedBuyer(uint256 indexed jobId, address indexed worker, address indexed buyer, uint8 rating);
     event JobCancelled(uint256 indexed jobId, address indexed buyer);
+    event JobExpired(uint256 indexed jobId, address indexed buyer);
+    event JobAutoReleased(uint256 indexed jobId, address indexed worker, uint256 payout);
 
     constructor(address _reputationEngine, address _skillRegistry) {
+        require(_reputationEngine != address(0), "zero address");
+        require(_skillRegistry != address(0), "zero address");
         reputationEngine = ReputationEngine(_reputationEngine);
         skillRegistry = SkillRegistry(_skillRegistry);
         owner = msg.sender;
     }
 
     /// @notice Buyer posts a job with reward locked in contract
+    /// @param description Job description
+    /// @param preferredSkillId Required skill (0 = open to all)
+    /// @param durationSeconds How long the worker has to complete (H-02: deadline enforcement)
     function postJob(
         string calldata description,
-        uint256 preferredSkillId
+        uint256 preferredSkillId,
+        uint256 durationSeconds
     ) external payable returns (uint256 jobId) {
         require(msg.value > 0, "reward required");
+        require(durationSeconds >= 1 hours && durationSeconds <= 30 days, "duration 1h-30d");
 
         jobId = nextJobId++;
         jobs[jobId] = Job({
@@ -65,7 +82,9 @@ contract JobMarket {
             status: JobStatus.Open,
             buyerRating: 0,
             workerRating: 0,
-            createdAt: block.timestamp
+            createdAt: block.timestamp,
+            deadline: block.timestamp + durationSeconds,
+            completedAt: 0
         });
 
         // Track in open jobs list
@@ -73,6 +92,44 @@ contract JobMarket {
         _openJobIds.push(jobId);
 
         emit JobPosted(jobId, msg.sender, description, msg.value, preferredSkillId);
+    }
+
+    /// @notice H-02: Buyer reclaims funds from expired in-progress job (worker missed deadline)
+    function reclaimExpiredJob(uint256 jobId) external {
+        Job storage job = jobs[jobId];
+        require(job.buyer == msg.sender, "only buyer");
+        require(job.status == JobStatus.InProgress, "not in progress");
+        require(block.timestamp > job.deadline, "deadline not passed");
+
+        uint256 reward = job.reward;
+        job.status = JobStatus.Expired;
+
+        emit JobExpired(jobId, msg.sender);
+
+        (bool ok, ) = msg.sender.call{value: reward}("");
+        require(ok, "refund failed");
+    }
+
+    /// @notice H-03: Worker auto-claims payment if buyer doesn't rate within RATING_WINDOW
+    function autoRelease(uint256 jobId) external {
+        Job storage job = jobs[jobId];
+        require(job.worker == msg.sender, "only worker");
+        require(job.status == JobStatus.Completed, "not completed");
+        require(job.completedAt > 0, "completion not recorded");
+        require(block.timestamp > job.completedAt + RATING_WINDOW, "rating window active");
+
+        // Auto-release with base fee (no reputation bonus since no rating)
+        uint256 baseFeeBps = 500;
+        uint256 fee = (job.reward * baseFeeBps) / 10000;
+        uint256 payout = job.reward - fee;
+
+        job.status = JobStatus.Rated;
+        accumulatedFees += fee;
+
+        emit JobAutoReleased(jobId, msg.sender, payout);
+
+        (bool ok, ) = msg.sender.call{value: payout}("");
+        require(ok, "payout failed");
     }
 
     /// @notice Worker accepts an open job
@@ -90,13 +147,15 @@ contract JobMarket {
         emit JobAccepted(jobId, msg.sender);
     }
 
-    /// @notice Worker marks job as completed
+    /// @notice Worker marks job as completed (must be before deadline)
     function completeJob(uint256 jobId) external {
         Job storage job = jobs[jobId];
         require(job.status == JobStatus.InProgress, "job not in progress");
         require(job.worker == msg.sender, "only worker can complete");
+        require(block.timestamp <= job.deadline, "deadline passed");
 
         job.status = JobStatus.Completed;
+        job.completedAt = block.timestamp;
         emit JobCompleted(jobId, msg.sender);
     }
 
@@ -122,6 +181,9 @@ contract JobMarket {
         uint256 adjustedFeeBps = reputationEngine.calculateFee(job.worker, baseFeeBps);
         uint256 fee = (job.reward * adjustedFeeBps) / 10000;
         uint256 payout = job.reward - fee;
+
+        // H-01 fix: Track fee separately
+        accumulatedFees += fee;
 
         emit BuyerRatedWorker(jobId, msg.sender, job.worker, score);
 
@@ -184,12 +246,13 @@ contract JobMarket {
         return (j.buyer, j.worker, j.description, j.reward, j.preferredSkillId, j.status, j.buyerRating, j.workerRating, j.createdAt);
     }
 
-    /// @notice Withdraw accumulated protocol fees (owner only)
+    /// @notice Withdraw accumulated protocol fees only — escrow funds protected (H-01 fix)
     function withdrawFees() external {
         require(msg.sender == owner, "only owner");
-        uint256 balance = address(this).balance;
-        require(balance > 0, "no fees");
-        (bool ok, ) = owner.call{value: balance}("");
+        uint256 fees = accumulatedFees;
+        require(fees > 0, "no fees");
+        accumulatedFees = 0;
+        (bool ok, ) = owner.call{value: fees}("");
         require(ok, "withdraw failed");
     }
 

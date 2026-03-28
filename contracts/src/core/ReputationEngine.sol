@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity 0.8.26;
 
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 
@@ -31,6 +31,7 @@ contract ReputationEngine is Ownable {
     constructor() Ownable(msg.sender) {}
 
     function setAuthorizedCaller(address caller, bool authorized) external onlyOwner {
+        require(caller != address(0), "zero address"); // L-03 fix
         authorizedCallers[caller] = authorized;
         emit CallerAuthorized(caller, authorized);
     }
@@ -79,6 +80,7 @@ contract ReputationEngine is Ownable {
             totalScore += rep.totalScore;
             totalRatings += rep.totalRatings;
         }
+        if (totalRatings == 0) return 50; // M-02 fix: prevent division by zero
         return totalScore / totalRatings;
     }
 
@@ -97,7 +99,9 @@ contract ReputationEngine is Ownable {
                 totalScore += r.totalScore;
                 totalRatings += r.totalRatings;
             }
-            rep = totalScore / totalRatings;
+            if (totalRatings > 0) { // M-02 fix: prevent division by zero
+                rep = totalScore / totalRatings;
+            }
         }
 
         // Dynamic fee: high rep = low fee, low rep = high fee
