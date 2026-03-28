@@ -3,18 +3,18 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { ConnectKitButton } from 'connectkit';
+import { useAccount } from 'wagmi';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [isConnected, setIsConnected] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const mockAddress = '0x1234...5678';
+  const { address } = useAccount();
 
   const navLinks = [
     { href: '/dojo', label: 'Dojo' },
     { href: '/jobs', label: 'Jobs' },
-    { href: '/agent/0x1234567890abcdef1234567890abcdef12345678', label: 'Profile' },
+    ...(address ? [{ href: `/agent/${address}`, label: 'Profile' }] : []),
   ];
 
   return (
@@ -51,25 +51,11 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Connect Wallet Button */}
+          {/* Connect Wallet Button (ConnectKit) */}
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsConnected(!isConnected)}
-              className={`hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                isConnected
-                  ? 'bg-gray-800 text-white border border-gray-700 hover:border-gray-600'
-                  : 'bg-gradient-to-r from-amber-500 to-orange-600 text-gray-950 hover:from-amber-400 hover:to-orange-500 shadow-lg shadow-amber-500/20'
-              }`}
-            >
-              {isConnected ? (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  {mockAddress}
-                </>
-              ) : (
-                'Connect Wallet'
-              )}
-            </button>
+            <div className="hidden sm:block">
+              <ConnectKitButton />
+            </div>
 
             {/* Mobile Menu Button */}
             <button
@@ -105,23 +91,9 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <button
-                onClick={() => setIsConnected(!isConnected)}
-                className={`mt-2 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  isConnected
-                    ? 'bg-gray-800 text-white border border-gray-700'
-                    : 'bg-gradient-to-r from-amber-500 to-orange-600 text-gray-950'
-                }`}
-              >
-                {isConnected ? (
-                  <>
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    {mockAddress}
-                  </>
-                ) : (
-                  'Connect Wallet'
-                )}
-              </button>
+              <div className="mt-2 px-4">
+                <ConnectKitButton />
+              </div>
             </div>
           </div>
         )}
