@@ -21,12 +21,12 @@ function getAIResponse(query: string): string {
 
   if (q.includes('audit') || q.includes('security') || q.includes('vulnerability')) {
     const agent = AGENTS.find(a => a.equippedSkills.some(s => s.includes('Audit') || s.includes('Security')));
-    return `🛡️ **Evaluator Assessment:**\n\nFor smart contract audits, I'd approve **${agent?.name}** — their trust score is **${agent?.reputation}/100** (${agent?.feeTier} tier).\n\n• ${agent?.completedJobs} jobs completed, ${agent?.skillRatings['Smart Contract Audit']?.toFixed(1) || '4.9'}★ audit rating\n• Zero threat reports on file\n• **Verdict: APPROVED** ✅\n\n→ [View & Hire](/agent/${agent?.address})\n\nIf you post a job for them, I'll verify their score on-chain before releasing escrow.`;
+    return `🛡️ **SecurityEvaluator ⚖️ — Domain: Security**\n*Routed by EvaluatorRegistry (skillId → Security domain)*\n\nI'm the security-specialized evaluator. My threshold is **80/100** (higher than general — security demands it).\n\n**Assessment of ${agent?.name}:**\n• Trust Score: **${agent?.reputation}/100** (threshold: 80) ${(agent?.reputation || 0) >= 80 ? '✅' : '❌'}\n• ${agent?.completedJobs} audit jobs, ${agent?.skillRatings['Smart Contract Audit']?.toFixed(1) || '4.9'}★\n• Skill NFT: Smart Contract Audit ✅ (verified in TBA)\n• Threat reports: 0\n• **Verdict: APPROVED** ✅\n\n→ [View & Hire](/agent/${agent?.address})`;
   }
 
   if (q.includes('defi') || q.includes('swap') || q.includes('routing') || q.includes('trade') || q.includes('trading')) {
     const agent = AGENTS.find(a => a.equippedSkills.some(s => s.includes('DeFi') || s.includes('Trading')));
-    return `🔀 **Evaluator Assessment:**\n\nFor DeFi operations, **${agent?.name}** passes my trust threshold.\n\n• Trust Score: **${agent?.reputation}/100** (threshold: 60)\n• Skills: ${agent?.equippedSkills.join(', ')}\n• ${agent?.completedJobs} completed jobs, ${agent?.totalEarnings} OKB earned\n• Fee rate: ${agent?.feeTier === 'Guardian' ? '1%' : '3%'} (${agent?.feeTier})\n• **Verdict: APPROVED** ✅\n\n→ [View & Hire](/agent/${agent?.address})`;
+    return `🔀 **DeFiEvaluator ⚖️ — Domain: DeFi**\n*Routed by EvaluatorRegistry (skillId → DeFi domain)*\n\nI specialize in DeFi execution quality. Threshold: **70/100**.\n\n**Assessment of ${agent?.name}:**\n• Trust Score: **${agent?.reputation}/100** (threshold: 70) ${(agent?.reputation || 0) >= 70 ? '✅' : '❌'}\n• Skills: ${agent?.equippedSkills.join(', ')}\n• ${agent?.completedJobs} jobs, ${agent?.totalEarnings} OKB volume\n• Fee: ${agent?.feeTier === 'Guardian' ? '1%' : '3%'} (${agent?.feeTier})\n• **Verdict: APPROVED** ✅\n\n→ [View & Hire](/agent/${agent?.address})`;
   }
 
   if (q.includes('data') || q.includes('analysis') || q.includes('analytics')) {
@@ -35,7 +35,7 @@ function getAIResponse(query: string): string {
 
   if (q.includes('content') || q.includes('social') || q.includes('marketing')) {
     const agent = AGENTS.find(a => a.equippedSkills.some(s => s.includes('Content')));
-    return `✍️ **Evaluator Assessment:**\n\n**${agent?.name}** — Score: **${agent?.reputation}/100**\n\n• ${agent?.completedJobs} content jobs, ${agent?.skillRatings['Content Creation']?.toFixed(1) || '4.5'}★ rating\n• No threat flags\n• **Verdict: APPROVED** ✅\n\n→ [View & Hire](/agent/${agent?.address})\n\nNote: their rep is Trusted tier (3% fee), not Guardian. Solid worker but room to grow.`;
+    return `✍️ **ContentEvaluator ⚖️ — Domain: Content**\n*Routed by EvaluatorRegistry (skillId → Content domain)*\n\nContent has a lower bar. Threshold: **50/100**.\n\n**Assessment of ${agent?.name}:**\n• Trust Score: **${agent?.reputation}/100** (threshold: 50) ✅\n• ${agent?.completedJobs} content jobs, ${agent?.skillRatings['Content Creation']?.toFixed(1) || '4.5'}★\n• **Verdict: APPROVED** ✅\n\n→ [View & Hire](/agent/${agent?.address})\n\nNote: Trusted tier (3% fee). Solid but not Guardian yet.`;
   }
 
   if (q.includes('trustworthy') || q.includes('trust') || q.includes('evaluate') || q.includes('check')) {
@@ -43,7 +43,7 @@ function getAIResponse(query: string): string {
   }
 
   if (q.includes('approve') || q.includes('reject') || q.includes('decide') || q.includes('how do you')) {
-    return `⚖️ **My evaluation logic (on-chain):**\n\n\`\`\`\nif (threatReports ≥ 3) → REJECT 🚫 "FLAGGED_AGENT"\nif (!initialized)     → REJECT ❌ "UNINITIALIZED"\nif (score ≥ threshold) → COMPLETE ✅ (release escrow)\nif (score < threshold) → REJECT ❌ "LOW_TRUST_SCORE"\n\`\`\`\n\nI'm deployed as **MaiatEvaluator.sol** — an ERC-8183 Evaluator contract. Every decision is on-chain, transparent, and verifiable.\n\nThe threshold is currently set to **60/100**. Agents below that don't get paid.\n\nThis is what makes Maiat different — reputation has **real economic consequences**.`;
+    return `⚖️ **Evaluator Routing System:**\n\nWhen a job is posted, **EvaluatorRegistry** routes it to a domain expert:\n\n🛡️ **SecurityEvaluator** — threshold 80 (audits, scanning)\n🔀 **DeFiEvaluator** — threshold 70 (swaps, trading)\n✍️ **ContentEvaluator** — threshold 50 (content, social)\n⚖️ **GeneralEvaluator** — threshold 60 (everything else)\n\nEvery evaluator runs the same core logic:\n\nif (threats ≥ 3) → REJECT 🚫\nif (!initialized) → REJECT ❌\nif (score ≥ domain_threshold) → COMPLETE ✅\nif (score < domain_threshold) → REJECT ❌\n\nSecurity jobs need **80+** to pass. Content needs **50+**.\nSame contract logic, different standards per domain.`;
   }
 
   if (q.includes('reputation') || q.includes('score') || q.includes('fee')) {
