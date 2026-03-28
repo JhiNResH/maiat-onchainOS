@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity 0.8.26;
 
 import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
@@ -30,35 +30,42 @@ contract AgentTBA is ERC721, Ownable {
     // In production: use the canonical ERC-6551 Registry at 0x000000006551c19487814612e58FE06813775758
     address public constant ERC6551_REGISTRY = address(0);
 
+    /// @notice L-07: Authorized factories that can call createAgentFor()
+    mapping(address => bool) public authorizedFactories;
+
     event AgentCreated(uint256 indexed agentId, address indexed owner, string name, address tbaAddress);
     event SkillEquipped(uint256 indexed agentId, uint256 indexed skillId);
     event SkillUnequipped(uint256 indexed agentId, uint256 indexed skillId);
 
     constructor(address _skillRegistry) ERC721("Maiat Agent", "MAGENT") Ownable(msg.sender) {
+        require(_skillRegistry != address(0), "zero address"); // L-03 fix
         skillRegistry = SkillRegistry(_skillRegistry);
     }
 
+    /// @notice L-07: Set authorized factory for createAgentFor()
+    function setAuthorizedFactory(address factory, bool authorized) external onlyOwner {
+        authorizedFactories[factory] = authorized;
+    }
+
     /// @notice Create an agent NFT with a deterministic TBA
-    function createAgent(string calldata name) external returns (uint256 agentId) {
+    /// @param agentName Agent display name (L-02 fix: renamed from 'name' to avoid shadowing ERC721.name())
+    function createAgent(string calldata agentName) external returns (uint256 agentId) {
         require(ownerToAgent[msg.sender] == 0, "already has agent");
 
         agentId = nextAgentId++;
-        
-        // Mint ERC-721 agent NFT
         _mint(msg.sender, agentId);
 
-        // Compute deterministic TBA address (simplified ERC-6551)
         address tba = _computeTBA(agentId);
 
         agents[agentId] = Agent({
-            name: name,
+            name: agentName,
             tbaAddress: tba,
             equippedSkills: new uint256[](0),
             exists: true
         });
         ownerToAgent[msg.sender] = agentId;
 
-        emit AgentCreated(agentId, msg.sender, name, tba);
+        emit AgentCreated(agentId, msg.sender, agentName, tba);
     }
 
     /// @notice Equip a skill NFT to an agent (must own both agent and skill)
@@ -101,9 +108,10 @@ contract AgentTBA is ERC721, Ownable {
     }
 
     /// @notice Get agent profile
+    /// @dev L-02 fix: renamed return vars to avoid shadowing
     function getAgent(uint256 agentId) external view returns (
-        string memory name,
-        address owner_,
+        string memory agentName,
+        address agentOwner,
         address tbaAddress,
         uint256[] memory equippedSkills
     ) {
@@ -113,7 +121,9 @@ contract AgentTBA is ERC721, Ownable {
     }
 
     /// @notice Create an agent NFT for another address (factory pattern)
-    function createAgentFor(address recipient, string calldata name) external returns (uint256 agentId) {
+    /// @dev L-07 fix: Only authorized factories or owner can call this
+    function createAgentFor(address recipient, string calldata agentName) external returns (uint256 agentId) {
+        require(authorizedFactories[msg.sender] || msg.sender == owner(), "not authorized");
         require(ownerToAgent[recipient] == 0, "already has agent");
 
         agentId = nextAgentId++;
@@ -122,14 +132,14 @@ contract AgentTBA is ERC721, Ownable {
         address tba = _computeTBA(agentId);
 
         agents[agentId] = Agent({
-            name: name,
+            name: agentName,
             tbaAddress: tba,
             equippedSkills: new uint256[](0),
             exists: true
         });
         ownerToAgent[recipient] = agentId;
 
-        emit AgentCreated(agentId, recipient, name, tba);
+        emit AgentCreated(agentId, recipient, agentName, tba);
     }
 
     /// @notice Get agent by owner address

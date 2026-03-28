@@ -47,6 +47,9 @@ contract EvaluatorRegistry is Ownable2Step {
 
     error EvaluatorRegistry__ZeroAddress();
     error EvaluatorRegistry__NotRegistered(uint256 skillId);
+    error EvaluatorRegistry__DomainTooLong(uint256 length);
+
+    uint256 public constant MAX_DOMAIN_LENGTH = 64;
 
     constructor(address _defaultEvaluator, address _owner) Ownable(_owner) {
         if (_defaultEvaluator == address(0)) revert EvaluatorRegistry__ZeroAddress();
@@ -97,6 +100,7 @@ contract EvaluatorRegistry is Ownable2Step {
         uint256 threshold
     ) external onlyOwner {
         if (evaluator == address(0)) revert EvaluatorRegistry__ZeroAddress();
+        if (bytes(domain).length > MAX_DOMAIN_LENGTH) revert EvaluatorRegistry__DomainTooLong(bytes(domain).length);
 
         evaluators[skillId] = EvaluatorInfo({
             evaluator: evaluator,
