@@ -8,6 +8,7 @@ import "../src/dojo/AgentTBA.sol";
 import "../src/core/JobMarket.sol";
 import "../src/core/TrustScoreOracle.sol";
 import "../src/identity/AgentIdentity.sol";
+import "../src/AgentFactory.sol";
 
 contract Deploy is Script {
     function run() external {
@@ -38,6 +39,9 @@ contract Deploy is Script {
         // 7. Deploy AgentIdentity
         AgentIdentity identity = new AgentIdentity(msg.sender);
 
+        // 8. Deploy AgentFactory (one-click registration)
+        AgentFactory factory = new AgentFactory(address(agentTBA), address(identity));
+
         vm.stopBroadcast();
 
         console.log("=== Maiat XLayer Deployment ===");
@@ -47,5 +51,6 @@ contract Deploy is Script {
         console.log("JobMarket:       ", address(jobMarket));
         console.log("TrustScoreOracle:", address(oracle));
         console.log("AgentIdentity:   ", address(identity));
+        console.log("AgentFactory:    ", address(factory));
     }
 }

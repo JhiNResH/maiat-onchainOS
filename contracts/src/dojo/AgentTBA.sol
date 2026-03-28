@@ -112,6 +112,26 @@ contract AgentTBA is ERC721, Ownable {
         return (a.name, ownerOf(agentId), a.tbaAddress, a.equippedSkills);
     }
 
+    /// @notice Create an agent NFT for another address (factory pattern)
+    function createAgentFor(address recipient, string calldata name) external returns (uint256 agentId) {
+        require(ownerToAgent[recipient] == 0, "already has agent");
+
+        agentId = nextAgentId++;
+        _mint(recipient, agentId);
+
+        address tba = _computeTBA(agentId);
+
+        agents[agentId] = Agent({
+            name: name,
+            tbaAddress: tba,
+            equippedSkills: new uint256[](0),
+            exists: true
+        });
+        ownerToAgent[recipient] = agentId;
+
+        emit AgentCreated(agentId, recipient, name, tba);
+    }
+
     /// @notice Get agent by owner address
     function getAgentByOwner(address owner_) external view returns (uint256) {
         return ownerToAgent[owner_];
