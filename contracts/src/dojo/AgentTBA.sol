@@ -117,6 +117,14 @@ contract AgentTBA is ERC721, Ownable {
         return ownerToAgent[owner_];
     }
 
+    /// @notice M-01 fix: Update ownerToAgent mapping on NFT transfer
+    function _update(address to, uint256 tokenId, address auth) internal override returns (address) {
+        address from = super._update(to, tokenId, auth);
+        if (from != address(0)) delete ownerToAgent[from];
+        if (to != address(0)) ownerToAgent[to] = tokenId;
+        return from;
+    }
+
     /// @notice Compute deterministic TBA address (simplified ERC-6551)
     /// @dev In production: call ERC-6551 Registry.account() for canonical address
     function _computeTBA(uint256 agentId) internal view returns (address) {

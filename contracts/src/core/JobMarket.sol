@@ -34,6 +34,8 @@ contract JobMarket {
     uint256[] private _openJobIds;
     // Track open job index for efficient removal
     mapping(uint256 => uint256) private _openJobIndex;
+    // H-01 fix: Track accumulated protocol fees separately from escrow
+    uint256 public accumulatedFees;
 
     event JobPosted(uint256 indexed jobId, address indexed buyer, string description, uint256 reward, uint256 preferredSkillId);
     event JobAccepted(uint256 indexed jobId, address indexed worker);
@@ -43,6 +45,8 @@ contract JobMarket {
     event JobCancelled(uint256 indexed jobId, address indexed buyer);
 
     constructor(address _reputationEngine, address _skillRegistry) {
+        require(_reputationEngine != address(0), "zero address");
+        require(_skillRegistry != address(0), "zero address");
         reputationEngine = ReputationEngine(_reputationEngine);
         skillRegistry = SkillRegistry(_skillRegistry);
         owner = msg.sender;
@@ -123,6 +127,9 @@ contract JobMarket {
         uint256 fee = (job.reward * adjustedFeeBps) / 10000;
         uint256 payout = job.reward - fee;
 
+        // H-01 fix: Track fee separately
+        accumulatedFees += fee;
+
         emit BuyerRatedWorker(jobId, msg.sender, job.worker, score);
 
         // Interactions LAST (CEI pattern)
@@ -184,12 +191,13 @@ contract JobMarket {
         return (j.buyer, j.worker, j.description, j.reward, j.preferredSkillId, j.status, j.buyerRating, j.workerRating, j.createdAt);
     }
 
-    /// @notice Withdraw accumulated protocol fees (owner only)
+    /// @notice Withdraw accumulated protocol fees only — escrow funds protected (H-01 fix)
     function withdrawFees() external {
         require(msg.sender == owner, "only owner");
-        uint256 balance = address(this).balance;
-        require(balance > 0, "no fees");
-        (bool ok, ) = owner.call{value: balance}("");
+        uint256 fees = accumulatedFees;
+        require(fees > 0, "no fees");
+        accumulatedFees = 0;
+        (bool ok, ) = owner.call{value: fees}("");
         require(ok, "withdraw failed");
     }
 
