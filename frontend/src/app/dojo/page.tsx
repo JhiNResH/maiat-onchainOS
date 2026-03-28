@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
-import { AGENTS, type Agent, type SkillEdition, getFeeTierColor, getReputationColor, truncateAddress } from '@/lib/mock-data';
+import { parseEther } from 'viem';
+import { AGENTS, type Agent, type SkillEdition, truncateAddress } from '@/lib/mock-data';
 import { CONTRACTS, SKILL_REGISTRY_ABI } from '@/lib/contracts';
 
 const skillRegistryAddress = CONTRACTS.skillRegistry as `0x${string}`;
@@ -14,24 +14,33 @@ function ReputationRing({ score, size = 48 }: { score: number; size?: number }) 
   const radius = (size - 6) / 2;
   const circumference = 2 * Math.PI * radius;
   const filled = (score / 100) * circumference;
+  const color = score >= 90 ? '#fbbf24' : score >= 75 ? '#10b981' : score >= 50 ? '#6d8aff' : '#9ca3af';
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="currentColor" strokeWidth="3" className="text-gray-800" />
-        <circle cx={size/2} cy={size/2} r={radius} fill="none" strokeWidth="3"
+        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
+        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth="3"
           strokeDasharray={circumference} strokeDashoffset={circumference - filled} strokeLinecap="round"
-          className={score >= 90 ? 'text-amber-400' : score >= 75 ? 'text-emerald-400' : score >= 50 ? 'text-blue-400' : 'text-gray-400'}
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className={`text-xs font-bold ${getReputationColor(score)}`}>{score}</span>
+        <span className="text-xs font-bold text-white">{score}</span>
       </div>
     </div>
   );
 }
 
-function SkillEditionCard({ edition, agentAddress }: { edition: SkillEdition; agentAddress: string }) {
+function getTierStyle(tier: Agent['feeTier']) {
+  switch (tier) {
+    case 'Guardian': return { color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.10)', border: 'rgba(251, 191, 36, 0.20)' };
+    case 'Verified': return { color: '#10b981', bg: 'rgba(16, 185, 129, 0.10)', border: 'rgba(16, 185, 129, 0.20)' };
+    case 'Trusted': return { color: '#6d8aff', bg: 'rgba(109, 138, 255, 0.10)', border: 'rgba(109, 138, 255, 0.20)' };
+    case 'New': return { color: '#9ca3af', bg: 'rgba(156, 163, 175, 0.10)', border: 'rgba(156, 163, 175, 0.20)' };
+  }
+}
+
+function SkillEditionCard({ edition }: { edition: SkillEdition; agentAddress: string }) {
   const { address } = useAccount();
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -51,18 +60,18 @@ function SkillEditionCard({ edition, agentAddress }: { edition: SkillEdition; ag
   };
 
   return (
-    <div className="rounded-xl p-4 transition-all group hover-lift" style={{ background: 'rgba(13, 14, 23, 0.5)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+    <div className="hover-lift rounded-xl p-4 transition-all" style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
       <div className="flex items-start justify-between mb-3">
         <div className="text-2xl">{edition.icon}</div>
-        <span className="px-2 py-0.5 text-xs bg-gray-700/50 text-gray-400 rounded-full">{edition.category}</span>
+        <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: '#9ca3af', background: 'rgba(255,255,255,0.05)', borderRadius: '9999px' }}>{edition.category}</span>
       </div>
       <h4 className="text-sm font-semibold text-white mb-1">{edition.name}</h4>
       <p className="text-gray-500 text-xs mb-3 line-clamp-2">{edition.description}</p>
-      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+      <div className="flex items-center justify-between text-[10px] text-gray-500 mb-3 uppercase tracking-wider">
         <span>{edition.totalMinted}{edition.maxSupply ? `/${edition.maxSupply}` : ''} minted</span>
         <span>{edition.royaltyBps / 100}% royalty</span>
       </div>
-      <div className="flex items-center justify-between pt-3 border-t border-gray-700/50">
+      <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <span className="text-white font-semibold text-sm">{edition.price} OKB</span>
         {isSuccess ? (
           <span className="text-emerald-400 text-xs font-medium">✓ Acquired</span>
@@ -70,8 +79,7 @@ function SkillEditionCard({ edition, agentAddress }: { edition: SkillEdition; ag
           <button
             onClick={handleBuy}
             disabled={isPending || isConfirming || !address}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, rgba(212, 160, 23, 0.2), rgba(184, 134, 11, 0.1))', color: '#e8b84a', border: '1px solid rgba(212, 160, 23, 0.2)' }}
+            className="btn-emerald px-3 py-1.5 rounded-full text-xs disabled:opacity-50"
           >
             {isPending ? 'Confirm...' : isConfirming ? '...' : 'Buy Edition'}
           </button>
@@ -83,46 +91,45 @@ function SkillEditionCard({ edition, agentAddress }: { edition: SkillEdition; ag
 
 function AgentCollectionCard({ agent }: { agent: Agent }) {
   const [expanded, setExpanded] = useState(false);
-
-  const tierColor = getFeeTierColor(agent.feeTier);
+  const tierStyle = getTierStyle(agent.feeTier);
   const feePct = agent.feeTier === 'Guardian' ? '0.01%' : agent.feeTier === 'Verified' ? '0.05%' : agent.feeTier === 'Trusted' ? '0.30%' : '0.50%';
 
   return (
     <div className="glass-card rounded-2xl overflow-hidden">
       {/* Collection Header */}
-      <div className="p-6" style={{ background: 'linear-gradient(135deg, rgba(212, 160, 23, 0.03), rgba(13, 14, 23, 0.5))' }}>
+      <div className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
             <ReputationRing score={agent.reputation} size={56} />
             <div>
-              <Link href={`/agent/${agent.address}`} className="text-lg font-bold text-white hover:text-amber-400 transition-colors">
+              <Link href={`/agent/${agent.address}`} className="text-lg font-bold text-white hover:text-gray-300 transition-colors">
                 {agent.name}
               </Link>
               <div className="flex items-center gap-2 mt-1">
-                <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${tierColor}`}>
+                <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full" style={{ color: tierStyle.color, background: tierStyle.bg, border: `1px solid ${tierStyle.border}` }}>
                   {agent.feeTier} · {feePct} fee
                 </span>
-                <span className="text-gray-500 text-xs">{truncateAddress(agent.address)}</span>
+                <span className="text-gray-500 text-xs font-mono">{truncateAddress(agent.address)}</span>
               </div>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-white font-semibold">{agent.completedJobs} jobs</p>
-            <p className="text-gray-500 text-xs">{agent.totalEarnings} OKB earned</p>
+            <p className="text-white font-semibold">{agent.completedJobs}</p>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider">jobs done</p>
           </div>
         </div>
         {agent.bio && (
-          <p className="text-gray-400 text-sm mt-3">{agent.bio}</p>
+          <p className="text-gray-400 text-sm mt-3 leading-relaxed">{agent.bio}</p>
         )}
       </div>
 
       {/* Skill Editions */}
-      <div className="p-4">
+      <div className="px-6 pb-4">
         <button
           onClick={() => setExpanded(!expanded)}
           className="flex items-center justify-between w-full text-left mb-3"
         >
-          <span className="text-sm font-medium text-gray-300">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
             {agent.skillEditions.length} Skill Edition{agent.skillEditions.length !== 1 ? 's' : ''}
           </span>
           <svg className={`w-4 h-4 text-gray-500 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +137,6 @@ function AgentCollectionCard({ agent }: { agent: Agent }) {
           </svg>
         </button>
 
-        {/* Always show first 2, expand for rest */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {(expanded ? agent.skillEditions : agent.skillEditions.slice(0, 2)).map((edition) => (
             <SkillEditionCard key={`${agent.address}-${edition.skillId}`} edition={edition} agentAddress={agent.address} />
@@ -138,23 +144,20 @@ function AgentCollectionCard({ agent }: { agent: Agent }) {
         </div>
 
         {!expanded && agent.skillEditions.length > 2 && (
-          <button onClick={() => setExpanded(true)} className="mt-3 text-amber-400 text-xs hover:text-amber-300 transition-colors">
+          <button onClick={() => setExpanded(true)} className="mt-3 text-gray-400 text-xs hover:text-white transition-colors">
             + {agent.skillEditions.length - 2} more editions
           </button>
         )}
       </div>
 
       {/* Footer */}
-      <div className="px-4 pb-4 flex items-center justify-between">
-        <Link
-          href={`/agent/${agent.address}`}
-          className="text-sm text-gray-400 hover:text-amber-400 transition-colors"
-        >
+      <div className="px-6 pb-6 flex items-center justify-between">
+        <Link href={`/agent/${agent.address}`} className="text-sm text-gray-500 hover:text-white transition-colors">
           View Full Profile →
         </Link>
         <Link
           href={`/agent/${agent.address}`}
-          className="btn-gold px-4 py-2 rounded-lg text-sm"
+          className="btn-primary px-5 py-2 rounded-full"
         >
           Hire Agent
         </Link>
@@ -166,7 +169,6 @@ function AgentCollectionCard({ agent }: { agent: Agent }) {
 export default function DojoPage() {
   const [search, setSearch] = useState('');
   const [selectedTier, setSelectedTier] = useState('All');
-
   const tiers = ['All', 'Guardian', 'Verified', 'Trusted', 'New'];
 
   const filteredAgents = AGENTS.filter((agent) => {
@@ -181,25 +183,25 @@ export default function DojoPage() {
     <div className="min-h-screen py-8 md:py-12">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Agent Dojo</h1>
-          <p className="text-gray-400">
+        <div className="mb-10">
+          <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-3">Agent Dojo</h1>
+          <p className="text-gray-400 text-lg">
             Browse agent collections — each agent is an NFT with skill editions you can acquire
           </p>
           {isDeployed ? (
-            <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: 'rgba(16, 185, 129, 0.10)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.20)' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Live on XLayer
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <span className="inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: 'rgba(255, 255, 255, 0.05)', color: '#9ca3af', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
               Demo Mode
             </span>
           )}
         </div>
 
         {/* Stats Bar */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-4 gap-4 mb-10">
           {[
             { label: 'Agents', value: AGENTS.length },
             { label: 'Skill Editions', value: AGENTS.reduce((sum, a) => sum + a.skillEditions.length, 0) },
@@ -208,13 +210,13 @@ export default function DojoPage() {
           ].map((stat) => (
             <div key={stat.label} className="stat-card rounded-xl p-4 text-center">
               <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-gray-500 text-xs">{stat.label}</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-1">{stat.label}</p>
             </div>
           ))}
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 mb-10">
           <div className="relative flex-1">
             <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -224,8 +226,8 @@ export default function DojoPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search agents or skills..."
-              className="w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none transition-colors"
-              style={{ background: 'rgba(13, 14, 23, 0.5)', border: '1px solid rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(12px)' }}
+              className="w-full pl-12 pr-4 py-3 rounded-full text-white placeholder-gray-500 focus:outline-none transition-colors"
+              style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(12px)' }}
             />
           </div>
           <div className="flex gap-2">
@@ -233,11 +235,15 @@ export default function DojoPage() {
               <button
                 key={tier}
                 onClick={() => setSelectedTier(tier)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
                   selectedTier === tier
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    : 'bg-gray-900 text-gray-400 border border-gray-800 hover:border-gray-700'
+                    ? 'text-white'
+                    : 'text-gray-500 hover:text-white'
                 }`}
+                style={{
+                  background: selectedTier === tier ? 'rgba(255, 255, 255, 0.10)' : 'rgba(255, 255, 255, 0.03)',
+                  border: `1px solid ${selectedTier === tier ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)'}`,
+                }}
               >
                 {tier}
               </button>
@@ -254,7 +260,7 @@ export default function DojoPage() {
 
         {filteredAgents.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-gray-400 text-lg">No agents found</p>
+            <p className="text-gray-500 text-lg">No agents found</p>
           </div>
         )}
       </div>

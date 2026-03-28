@@ -18,86 +18,95 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b" style={{ background: 'rgba(10, 10, 10, 0.7)', backdropFilter: 'blur(24px) saturate(1.4)', borderColor: 'rgba(212, 160, 23, 0.08)' }}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-amber-500/20 blur-xl group-hover:bg-amber-500/30 transition-all rounded-full" />
-              <div className="relative w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xl glow-gold" style={{ background: 'linear-gradient(135deg, #d4a017, #b8860b)', color: '#0A0A0A' }}>
-                M
-              </div>
-            </div>
-            <span className="font-bold text-xl tracking-tight text-gold-gradient">
-              Maiat
-            </span>
-          </Link>
+    <nav
+      className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl rounded-full px-6 py-3 flex items-center justify-between transition-all duration-500"
+      style={{
+        background: 'rgba(255, 255, 255, 0.05)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(60px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(60px) saturate(180%)',
+        boxShadow: 'inset 0 0 30px rgba(255, 255, 255, 0.02), 0 30px 100px rgba(0, 0, 0, 0.3)',
+      }}
+    >
+      {/* Logo */}
+      <Link href="/" className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+          <span className="text-black font-bold text-sm">M</span>
+        </div>
+        <span className="font-bold text-white tracking-tight">Maiat</span>
+      </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  pathname === link.href || pathname.startsWith(link.href.split('/').slice(0, 2).join('/') + '/')
-                    ? 'bg-amber-500/10 text-amber-400'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Connect Wallet Button (ConnectKit) */}
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:block">
-              <ConnectKitButton />
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-gray-400 hover:text-white"
+      {/* Desktop Navigation — macOS dock style */}
+      <div className="hidden md:flex items-center gap-0.5">
+        {navLinks.map((link) => {
+          const isActive = pathname === link.href || pathname.startsWith(link.href.split('/').slice(0, 2).join('/') + '/');
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="px-5 py-2 rounded-full"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {isMobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
+              <span className={`nav-link ${isActive ? 'active' : ''}`}>
+                {link.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Right side */}
+      <div className="flex items-center gap-3">
+        <div className="hidden sm:block">
+          <ConnectKitButton />
         </div>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-800">
-            <div className="flex flex-col gap-2">
-              {navLinks.map((link) => (
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="md:hidden w-9 h-9 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(255, 255, 255, 0.10)', border: '1px solid rgba(255, 255, 255, 0.10)' }}
+        >
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {isMobileMenuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div
+          className="absolute top-full left-0 right-0 mt-2 rounded-3xl p-4 md:hidden"
+          style={{
+            background: 'rgba(10, 10, 10, 0.90)',
+            border: '1px solid rgba(255, 255, 255, 0.10)',
+            backdropFilter: 'blur(40px)',
+            boxShadow: '0 30px 100px rgba(0, 0, 0, 0.5)',
+          }}
+        >
+          <div className="flex flex-col gap-2">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
                 <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    pathname === link.href
-                      ? 'bg-amber-500/10 text-amber-400'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                  }`}
+                  className={`px-4 py-2 rounded-xl nav-link ${isActive ? 'active' : ''}`}
                 >
                   {link.label}
                 </Link>
-              ))}
-              <div className="mt-2 px-4">
-                <ConnectKitButton />
-              </div>
+              );
+            })}
+            <div className="mt-2 px-2">
+              <ConnectKitButton />
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </nav>
   );
 }
