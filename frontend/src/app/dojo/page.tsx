@@ -1,239 +1,162 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useState } from 'react';
+import Link from 'next/link';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
+import { AGENTS, type Agent, type SkillEdition, getFeeTierColor, getReputationColor, truncateAddress } from '@/lib/mock-data';
 import { CONTRACTS, SKILL_REGISTRY_ABI } from '@/lib/contracts';
-import { SKILLS as MOCK_SKILLS, type Skill } from '@/lib/mock-data';
 
 const skillRegistryAddress = CONTRACTS.skillRegistry as `0x${string}`;
 const isDeployed = skillRegistryAddress !== '0x';
 
-function StarRating({ rating }: { rating: number }) {
+function ReputationRing({ score, size = 48 }: { score: number; size?: number }) {
+  const radius = (size - 6) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const filled = (score / 100) * circumference;
+
   return (
-    <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <svg
-          key={star}
-          className={`w-4 h-4 ${star <= rating ? 'text-amber-400' : 'text-gray-600'}`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      ))}
-      <span className="text-gray-400 text-sm ml-1">{rating.toFixed(1)}</span>
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="currentColor" strokeWidth="3" className="text-gray-800" />
+        <circle cx={size/2} cy={size/2} r={radius} fill="none" strokeWidth="3"
+          strokeDasharray={circumference} strokeDashoffset={circumference - filled} strokeLinecap="round"
+          className={score >= 90 ? 'text-amber-400' : score >= 75 ? 'text-emerald-400' : score >= 50 ? 'text-blue-400' : 'text-gray-400'}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className={`text-xs font-bold ${getReputationColor(score)}`}>{score}</span>
+      </div>
     </div>
   );
 }
 
-function BuySkillButton({ skillId, price, skillName }: { skillId: number | string; price: bigint; skillName: string }) {
+function SkillEditionCard({ edition, agentAddress }: { edition: SkillEdition; agentAddress: string }) {
   const { address } = useAccount();
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const handleBuy = () => {
     if (!isDeployed) {
-      alert(`Demo mode: Would buy "${skillName}" for ${formatEther(price)} OKB on XLayer`);
+      alert(`Demo: Buy "${edition.name}" for ${edition.price} OKB`);
       return;
     }
     writeContract({
       address: skillRegistryAddress,
       abi: SKILL_REGISTRY_ABI,
       functionName: 'buySkill',
-      args: [BigInt(typeof skillId === 'string' ? skillId.replace(/\D/g, '') || '0' : skillId)],
-      value: price,
+      args: [BigInt(edition.skillId)],
+      value: parseEther(String(edition.price)),
     });
   };
 
-  if (isSuccess) {
-    return (
-      <div className="px-4 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 text-sm font-medium text-center">
-        ✓ Acquired!
-      </div>
-    );
-  }
-
   return (
-    <button
-      onClick={handleBuy}
-      disabled={isPending || isConfirming || !address}
-      className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-gray-950 font-medium text-sm hover:from-amber-400 hover:to-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {isPending ? 'Confirm in Wallet...' : isConfirming ? 'Confirming...' : !address ? 'Connect Wallet' : 'Buy Skill'}
-    </button>
-  );
-}
-
-function SkillCard({ skill }: { skill: Skill }) {
-  const price = parseEther(String(skill.price));
-
-  return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 hover:border-amber-500/30 transition-all group">
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center text-3xl">
-          {skill.icon}
-        </div>
-        <div className="flex items-center gap-2">
-          {isDeployed && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20">
-              On-Chain
-            </span>
-          )}
-          <span className="px-2 py-1 text-xs font-medium bg-gray-800 text-gray-300 rounded-full">
-            {skill.category}
-          </span>
-        </div>
+    <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 hover:border-amber-500/30 transition-all group">
+      <div className="flex items-start justify-between mb-3">
+        <div className="text-2xl">{edition.icon}</div>
+        <span className="px-2 py-0.5 text-xs bg-gray-700/50 text-gray-400 rounded-full">{edition.category}</span>
       </div>
-
-      <h3 className="text-lg font-semibold text-white mb-2">{skill.name}</h3>
-      <p className="text-gray-400 text-sm mb-4 line-clamp-2">{skill.description}</p>
-
-      <div className="flex items-center justify-between mb-4">
-        <StarRating rating={skill.rating} />
-        <span className="text-gray-500 text-sm">{skill.totalBuyers} owners</span>
+      <h4 className="text-sm font-semibold text-white mb-1">{edition.name}</h4>
+      <p className="text-gray-500 text-xs mb-3 line-clamp-2">{edition.description}</p>
+      <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+        <span>{edition.totalMinted}{edition.maxSupply ? `/${edition.maxSupply}` : ''} minted</span>
+        <span>{edition.royaltyBps / 100}% royalty</span>
       </div>
-
-      <div className="flex items-center justify-between pt-4 border-t border-gray-800">
-        <div>
-          <p className="text-gray-500 text-xs">Price</p>
-          <p className="text-white font-semibold">{skill.price} OKB</p>
-        </div>
-        <BuySkillButton skillId={skill.id} price={price} skillName={skill.name} />
+      <div className="flex items-center justify-between pt-3 border-t border-gray-700/50">
+        <span className="text-white font-semibold text-sm">{edition.price} OKB</span>
+        {isSuccess ? (
+          <span className="text-emerald-400 text-xs font-medium">✓ Acquired</span>
+        ) : (
+          <button
+            onClick={handleBuy}
+            disabled={isPending || isConfirming || !address}
+            className="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 text-xs font-medium hover:bg-amber-500/30 transition-all disabled:opacity-50"
+          >
+            {isPending ? 'Confirm...' : isConfirming ? '...' : 'Buy Edition'}
+          </button>
+        )}
       </div>
-
-      <p className="text-gray-500 text-xs mt-3">
-        Creator: {skill.creator} • {skill.royalty}% royalty
-      </p>
     </div>
   );
 }
 
-function CreateSkillModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { address } = useAccount();
-  const { writeContract, data: hash, isPending } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+function AgentCollectionCard({ agent }: { agent: Agent }) {
+  const [expanded, setExpanded] = useState(false);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    royalty: '',
-  });
-
-  useEffect(() => {
-    if (isSuccess) {
-      setTimeout(() => onClose(), 1500);
-    }
-  }, [isSuccess, onClose]);
-
-  if (!isOpen) return null;
-
-  const handleCreate = () => {
-    if (!isDeployed) {
-      alert(`Demo mode: Would create "${formData.name}" skill on XLayer`);
-      onClose();
-      return;
-    }
-    writeContract({
-      address: skillRegistryAddress,
-      abi: SKILL_REGISTRY_ABI,
-      functionName: 'createSkill',
-      args: [
-        formData.name,
-        formData.description,
-        parseEther(formData.price || '0'),
-        Number(formData.royalty || '0') * 100, // convert % to bps
-      ],
-    });
-  };
+  const tierColor = getFeeTierColor(agent.feeTier);
+  const feePct = agent.feeTier === 'Guardian' ? '0.01%' : agent.feeTier === 'Verified' ? '0.05%' : agent.feeTier === 'Trusted' ? '0.30%' : '0.50%';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-md">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">Create Skill NFT</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-amber-500/20 transition-all">
+      {/* Collection Header */}
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <ReputationRing score={agent.reputation} size={56} />
+            <div>
+              <Link href={`/agent/${agent.address}`} className="text-lg font-bold text-white hover:text-amber-400 transition-colors">
+                {agent.name}
+              </Link>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${tierColor}`}>
+                  {agent.feeTier} · {feePct} fee
+                </span>
+                <span className="text-gray-500 text-xs">{truncateAddress(agent.address)}</span>
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-white font-semibold">{agent.completedJobs} jobs</p>
+            <p className="text-gray-500 text-xs">{agent.totalEarnings} OKB earned</p>
+          </div>
+        </div>
+        {agent.bio && (
+          <p className="text-gray-400 text-sm mt-3">{agent.bio}</p>
+        )}
+      </div>
+
+      {/* Skill Editions */}
+      <div className="p-4">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center justify-between w-full text-left mb-3"
+        >
+          <span className="text-sm font-medium text-gray-300">
+            {agent.skillEditions.length} Skill Edition{agent.skillEditions.length !== 1 ? 's' : ''}
+          </span>
+          <svg className={`w-4 h-4 text-gray-500 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {/* Always show first 2, expand for rest */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {(expanded ? agent.skillEditions : agent.skillEditions.slice(0, 2)).map((edition) => (
+            <SkillEditionCard key={`${agent.address}-${edition.skillId}`} edition={edition} agentAddress={agent.address} />
+          ))}
         </div>
 
-        {isSuccess ? (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-4">✨</div>
-            <p className="text-emerald-400 font-semibold text-lg">Skill NFT Created!</p>
-            <p className="text-gray-400 text-sm mt-2">Your skill is now available in the Dojo</p>
-          </div>
-        ) : (
-          <form className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Skill Name</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., DeFi Routing"
-                className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe what this skill enables..."
-                rows={3}
-                className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors resize-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Price (OKB)</label>
-                <input
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="0.001"
-                  step="0.001"
-                  min="0"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Royalty (%)</label>
-                <input
-                  type="number"
-                  value={formData.royalty}
-                  onChange={(e) => setFormData({ ...formData, royalty: e.target.value })}
-                  placeholder="5"
-                  min="0"
-                  max="100"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {!isDeployed && (
-              <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <p className="text-amber-400 text-xs">⚠️ Demo mode — contracts not yet deployed to XLayer</p>
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={handleCreate}
-              disabled={isPending || isConfirming || !formData.name || (!address && isDeployed)}
-              className="w-full py-3 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-gray-950 font-semibold hover:from-amber-400 hover:to-orange-500 transition-all mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isPending ? 'Confirm in Wallet...' : isConfirming ? 'Creating...' : 'Create Skill NFT'}
-            </button>
-          </form>
+        {!expanded && agent.skillEditions.length > 2 && (
+          <button onClick={() => setExpanded(true)} className="mt-3 text-amber-400 text-xs hover:text-amber-300 transition-colors">
+            + {agent.skillEditions.length - 2} more editions
+          </button>
         )}
+      </div>
+
+      {/* Footer */}
+      <div className="px-4 pb-4 flex items-center justify-between">
+        <Link
+          href={`/agent/${agent.address}`}
+          className="text-sm text-gray-400 hover:text-amber-400 transition-colors"
+        >
+          View Full Profile →
+        </Link>
+        <Link
+          href={`/agent/${agent.address}`}
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-gray-950 text-sm font-medium hover:from-amber-400 hover:to-orange-500 transition-all"
+        >
+          Hire Agent
+        </Link>
       </div>
     </div>
   );
@@ -241,101 +164,97 @@ function CreateSkillModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
 export default function DojoPage() {
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedTier, setSelectedTier] = useState('All');
 
-  // Use mock data (on-chain data would replace this after deploy)
-  const skills = MOCK_SKILLS;
-  const categories = ['All', ...new Set(skills.map((s) => s.category))];
+  const tiers = ['All', 'Guardian', 'Verified', 'Trusted', 'New'];
 
-  const filteredSkills = skills.filter((skill) => {
+  const filteredAgents = AGENTS.filter((agent) => {
     const matchesSearch =
-      skill.name.toLowerCase().includes(search.toLowerCase()) ||
-      skill.description.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || skill.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+      agent.name.toLowerCase().includes(search.toLowerCase()) ||
+      agent.skillEditions.some(s => s.name.toLowerCase().includes(search.toLowerCase()));
+    const matchesTier = selectedTier === 'All' || agent.feeTier === selectedTier;
+    return matchesSearch && matchesTier;
   });
 
   return (
     <div className="min-h-screen py-8 md:py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Skill Dojo</h1>
-            <p className="text-gray-400">
-              Browse and acquire skill NFTs (ERC-1155) to unlock new capabilities
-            </p>
-            {isDeployed ? (
-              <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Live on XLayer
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                Demo Mode
-              </span>
-            )}
-          </div>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-gray-950 font-semibold hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20"
-          >
-            + Create Skill
-          </button>
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Agent Dojo</h1>
+          <p className="text-gray-400">
+            Browse agent collections — each agent is an NFT with skill editions you can acquire
+          </p>
+          {isDeployed ? (
+            <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Live on XLayer
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              Demo Mode
+            </span>
+          )}
+        </div>
+
+        {/* Stats Bar */}
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          {[
+            { label: 'Agents', value: AGENTS.length },
+            { label: 'Skill Editions', value: AGENTS.reduce((sum, a) => sum + a.skillEditions.length, 0) },
+            { label: 'Jobs Completed', value: AGENTS.reduce((sum, a) => sum + a.completedJobs, 0) },
+            { label: 'Volume (OKB)', value: AGENTS.reduce((sum, a) => sum + a.totalEarnings, 0).toFixed(0) },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-white">{stat.value}</p>
+              <p className="text-gray-500 text-xs">{stat.label}</p>
+            </div>
+          ))}
         </div>
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <svg
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search skills..."
+              placeholder="Search agents or skills..."
               className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
             />
           </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
-            {categories.map((category) => (
+          <div className="flex gap-2">
+            {tiers.map((tier) => (
               <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
+                key={tier}
+                onClick={() => setSelectedTier(tier)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  selectedCategory === category
+                  selectedTier === tier
                     ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                     : 'bg-gray-900 text-gray-400 border border-gray-800 hover:border-gray-700'
                 }`}
               >
-                {category}
+                {tier}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Skills Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredSkills.map((skill) => (
-            <SkillCard key={skill.id} skill={skill} />
+        {/* Agent Collections */}
+        <div className="space-y-6">
+          {filteredAgents.map((agent) => (
+            <AgentCollectionCard key={agent.address} agent={agent} />
           ))}
         </div>
 
-        {filteredSkills.length === 0 && (
+        {filteredAgents.length === 0 && (
           <div className="text-center py-16">
-            <p className="text-gray-400 text-lg">No skills found matching your criteria</p>
+            <p className="text-gray-400 text-lg">No agents found</p>
           </div>
         )}
-
-        <CreateSkillModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
       </div>
     </div>
   );
