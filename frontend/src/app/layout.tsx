@@ -31,10 +31,12 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-gray-950 text-gray-50">
+      <body className="min-h-full flex flex-col text-white" style={{ backgroundColor: '#0A0A0A' }}>
         <Web3Provider>
+          <div className="atmosphere" />
+          <div className="mesh-grid fixed inset-0 z-[-1] pointer-events-none" />
           <Navbar />
-          <main className="flex-1 pt-16">
+          <main className="flex-1 pt-16 relative z-10">
             {children}
           </main>
           <Footer />

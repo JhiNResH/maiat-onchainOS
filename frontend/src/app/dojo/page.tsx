@@ -51,7 +51,7 @@ function SkillEditionCard({ edition, agentAddress }: { edition: SkillEdition; ag
   };
 
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 hover:border-amber-500/30 transition-all group">
+    <div className="rounded-xl p-4 transition-all group hover-lift" style={{ background: 'rgba(13, 14, 23, 0.5)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
       <div className="flex items-start justify-between mb-3">
         <div className="text-2xl">{edition.icon}</div>
         <span className="px-2 py-0.5 text-xs bg-gray-700/50 text-gray-400 rounded-full">{edition.category}</span>
@@ -70,7 +70,8 @@ function SkillEditionCard({ edition, agentAddress }: { edition: SkillEdition; ag
           <button
             onClick={handleBuy}
             disabled={isPending || isConfirming || !address}
-            className="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 text-xs font-medium hover:bg-amber-500/30 transition-all disabled:opacity-50"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg, rgba(212, 160, 23, 0.2), rgba(184, 134, 11, 0.1))', color: '#e8b84a', border: '1px solid rgba(212, 160, 23, 0.2)' }}
           >
             {isPending ? 'Confirm...' : isConfirming ? '...' : 'Buy Edition'}
           </button>
@@ -87,9 +88,9 @@ function AgentCollectionCard({ agent }: { agent: Agent }) {
   const feePct = agent.feeTier === 'Guardian' ? '0.01%' : agent.feeTier === 'Verified' ? '0.05%' : agent.feeTier === 'Trusted' ? '0.30%' : '0.50%';
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-amber-500/20 transition-all">
+    <div className="glass-card rounded-2xl overflow-hidden">
       {/* Collection Header */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-6">
+      <div className="p-6" style={{ background: 'linear-gradient(135deg, rgba(212, 160, 23, 0.03), rgba(13, 14, 23, 0.5))' }}>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
             <ReputationRing score={agent.reputation} size={56} />
@@ -153,7 +154,7 @@ function AgentCollectionCard({ agent }: { agent: Agent }) {
         </Link>
         <Link
           href={`/agent/${agent.address}`}
-          className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-gray-950 text-sm font-medium hover:from-amber-400 hover:to-orange-500 transition-all"
+          className="btn-gold px-4 py-2 rounded-lg text-sm"
         >
           Hire Agent
         </Link>
@@ -205,7 +206,7 @@ export default function DojoPage() {
             { label: 'Jobs Completed', value: AGENTS.reduce((sum, a) => sum + a.completedJobs, 0) },
             { label: 'Volume (OKB)', value: AGENTS.reduce((sum, a) => sum + a.totalEarnings, 0).toFixed(0) },
           ].map((stat) => (
-            <div key={stat.label} className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+            <div key={stat.label} className="stat-card rounded-xl p-4 text-center">
               <p className="text-2xl font-bold text-white">{stat.value}</p>
               <p className="text-gray-500 text-xs">{stat.label}</p>
             </div>
@@ -223,7 +224,8 @@ export default function DojoPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search agents or skills..."
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
+              className="w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-gray-500 focus:outline-none transition-colors"
+              style={{ background: 'rgba(13, 14, 23, 0.5)', border: '1px solid rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(12px)' }}
             />
           </div>
           <div className="flex gap-2">
@@ -244,7 +246,7 @@ export default function DojoPage() {
         </div>
 
         {/* Agent Collections */}
-        <div className="space-y-6">
+        <div className="space-y-6 stagger-children">
           {filteredAgents.map((agent) => (
             <AgentCollectionCard key={agent.address} agent={agent} />
           ))}

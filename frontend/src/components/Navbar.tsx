@@ -18,19 +18,19 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-800 bg-gray-950/80 backdrop-blur-xl">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b" style={{ background: 'rgba(10, 10, 10, 0.7)', backdropFilter: 'blur(24px) saturate(1.4)', borderColor: 'rgba(212, 160, 23, 0.08)' }}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <div className="relative">
               <div className="absolute inset-0 bg-amber-500/20 blur-xl group-hover:bg-amber-500/30 transition-all rounded-full" />
-              <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center font-bold text-gray-950 text-xl shadow-lg shadow-amber-500/20">
+              <div className="relative w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xl glow-gold" style={{ background: 'linear-gradient(135deg, #d4a017, #b8860b)', color: '#0A0A0A' }}>
                 M
               </div>
             </div>
-            <span className="font-bold text-xl tracking-tight">
-              <span className="text-amber-400">Maiat</span>
+            <span className="font-bold text-xl tracking-tight text-gold-gradient">
+              Maiat
             </span>
           </Link>
 
