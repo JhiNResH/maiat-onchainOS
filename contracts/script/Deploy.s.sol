@@ -11,6 +11,7 @@ import "../src/identity/AgentIdentity.sol";
 import "../src/AgentFactory.sol";
 import "../src/acp/MaiatEvaluator.sol";
 import "../src/acp/EvaluatorRegistry.sol";
+import "../src/hooks/TrustGateHook.sol";
 
 contract Deploy is Script {
     function run() external {
@@ -69,7 +70,13 @@ contract Deploy is Script {
         evalRegistry.setEvaluator(2, address(evaluator), "DeFi", 70);
         evalRegistry.setEvaluator(3, address(evaluator), "Content", 50);
 
-        // 13. Seed demo skills on SkillRegistry
+        // 13. Deploy TrustGateHook (reputation → dynamic swap fee)
+        TrustGateHook trustGateHook = new TrustGateHook(
+            address(oracle),
+            deployer
+        );
+
+        // 14. Seed demo skills on SkillRegistry
         skillRegistry.createSkill("Smart Contract Audit", "Security auditing for smart contracts", 0.001 ether, 1000);
         skillRegistry.createSkill("DeFi Strategy", "DeFi yield optimization and risk analysis", 0.001 ether, 500);
         skillRegistry.createSkill("Content Creation", "Technical writing and marketing content", 0.0005 ether, 500);
@@ -90,8 +97,10 @@ contract Deploy is Script {
         console.log("AgentFactory:     ", address(factory));
         console.log("MaiatEvaluator:   ", address(evaluator));
         console.log("EvaluatorRegistry:", address(evalRegistry));
+        console.log("TrustGateHook:    ", address(trustGateHook));
         console.log("---");
         console.log("Demo skills seeded: 4 (Audit, DeFi, Content, Frontend)");
         console.log("Factory authorized on AgentTBA + AgentIdentity");
+        console.log("TrustGateHook: score>=90=0.01%, >=75=0.05%, >=50=0.30%, >=25=0.50%, <25=1.00%");
     }
 }
