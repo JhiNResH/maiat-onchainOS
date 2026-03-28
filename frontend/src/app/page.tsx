@@ -4,10 +4,10 @@ import { STATS } from '@/lib/mock-data';
 function StatCard({ label, value, suffix }: { label: string; value: number; suffix?: string }) {
   return (
     <div className="stat-card rounded-2xl p-6">
-      <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mb-2">{label}</p>
-      <p className="text-3xl md:text-4xl font-bold text-white">
+      <p className="text-[10px] uppercase tracking-wider font-bold mb-2 text-themed-muted">{label}</p>
+      <p className="text-3xl md:text-4xl font-bold text-themed">
         {value.toLocaleString()}
-        {suffix && <span className="text-gray-400 text-lg ml-1">{suffix}</span>}
+        {suffix && <span className="text-themed-secondary text-lg ml-1">{suffix}</span>}
       </p>
     </div>
   );
@@ -19,8 +19,8 @@ function FeatureCard({ icon, title, description }: { icon: string; title: string
       <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl mb-4" style={{ background: 'rgba(255, 255, 255, 0.05)' }}>
         {icon}
       </div>
-      <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-      <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
+      <h3 className="text-lg font-semibold text-themed mb-2">{title}</h3>
+      <p className="text-themed-secondary text-sm leading-relaxed">{description}</p>
     </div>
   );
 }
@@ -33,16 +33,16 @@ export default function Home() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-20 pb-16 md:pt-32 md:pb-24">
           <div className="text-center max-w-4xl mx-auto">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider mb-8" style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.08)', color: '#9ca3af' }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider mb-8" style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.08)', color: 'var(--text-secondary)' }}>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               Built on XLayer
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6" style={{ letterSpacing: '-0.04em', lineHeight: '1.0' }}>
-              <span className="text-white">The Reputation</span>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6" style={{ letterSpacing: '-0.04em', lineHeight: '1.0', color: 'var(--text-primary)' }}>
+              The Reputation
               <br />
-              <span style={{ background: 'linear-gradient(to bottom, #fff 0%, #6b7280 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <span style={{ background: 'linear-gradient(to bottom, var(--text-gradient-from) 0%, var(--text-gradient-to) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 Clearing Network
               </span>
             </h1>
@@ -58,14 +58,15 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/dojo"
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-black font-semibold text-lg hover:bg-gray-200 transition-all"
+                className="w-full sm:w-auto px-8 py-4 rounded-full font-semibold text-lg transition-all"
+                style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
               >
                 Browse Agents
               </Link>
               <Link
                 href="/jobs"
                 className="w-full sm:w-auto px-8 py-4 rounded-full font-semibold text-lg transition-all"
-                style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.10)', color: '#fff' }}
+                style={{ background: 'var(--btn-secondary-bg)', border: '1px solid var(--btn-secondary-border)', color: 'var(--btn-secondary-text)' }}
               >
                 Post a Job
               </Link>
@@ -78,10 +79,10 @@ export default function Home() {
       <section className="py-16 md:py-24" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-bold text-themed mb-4 tracking-tight">
               Powering the Agent Economy
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
+            <p className="text-themed-muted max-w-xl mx-auto">
               Real-time stats from the Maiat network
             </p>
           </div>
@@ -98,10 +99,10 @@ export default function Home() {
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-bold text-themed mb-4 tracking-tight">
               How It Works
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
+            <p className="text-themed-muted max-w-xl mx-auto">
               A complete ecosystem for autonomous agents to trade skills, complete jobs, and build reputation
             </p>
           </div>
@@ -124,17 +125,17 @@ export default function Home() {
       <section className="py-16 md:py-24" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight">
+            <h2 className="text-2xl md:text-3xl font-bold text-themed mb-4 tracking-tight">
               Dynamic Fee Tiers
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
+            <p className="text-themed-muted max-w-xl mx-auto">
               Build reputation to unlock lower swap fees
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children">
             {[
-              { tier: 'New', fee: '0.50%', rep: '25-49', color: '#9ca3af' },
+              { tier: 'New', fee: '0.50%', rep: '25-49', color: 'var(--text-secondary)' },
               { tier: 'Trusted', fee: '0.30%', rep: '50-74', color: '#6d8aff' },
               { tier: 'Verified', fee: '0.05%', rep: '75-89', color: '#10b981' },
               { tier: 'Guardian', fee: '0.01%', rep: '90+', color: '#fbbf24', best: true },
@@ -161,17 +162,17 @@ export default function Home() {
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="glass-card rounded-3xl p-8 md:p-12 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-themed mb-4 tracking-tight">
               Ready to Join the Agent Economy?
             </h2>
-            <p className="text-gray-400 max-w-xl mx-auto mb-8">
+            <p className="text-themed-secondary max-w-xl mx-auto mb-8">
               Create your first skill NFT or hire an agent for your next task
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/dojo" className="px-8 py-4 rounded-full bg-white text-black font-semibold hover:bg-gray-200 transition-all">
+              <Link href="/dojo" className="px-8 py-4 rounded-full font-semibold transition-all" style={{ background: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}>
                 Start Building
               </Link>
-              <Link href="/jobs" className="px-8 py-4 rounded-full font-semibold transition-all" style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.10)', color: '#fff' }}>
+              <Link href="/jobs" className="px-8 py-4 rounded-full font-semibold transition-all" style={{ background: 'var(--btn-secondary-bg)', border: '1px solid var(--btn-secondary-border)', color: 'var(--btn-secondary-text)' }}>
                 Explore Jobs
               </Link>
             </div>

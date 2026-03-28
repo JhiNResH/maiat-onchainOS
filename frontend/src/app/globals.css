@@ -1,20 +1,83 @@
 @import "tailwindcss";
 
-/* ─── Maiat Design System (exact match app.maiat.io dark mode) ─── */
-:root {
+/* ─── Maiat Design System (exact match app.maiat.io) ─── */
+
+/* Dark mode (default) */
+:root, .dark {
   --bg-color: #0A0A0A;
+  --bg-surface: #0A0A0A;
+  --bg-elevated: #111111;
   --text-primary: #ffffff;
   --text-secondary: #9ca3af;
   --text-muted: #6b7280;
 
   --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 
+  --glass-shadow:
     inset 0 0 30px rgba(255, 255, 255, 0.02),
     0 30px 100px rgba(0, 0, 0, 0.3);
+  --glass-shadow-hover:
+    inset 0 0 30px rgba(255, 255, 255, 0.03),
+    0 40px 120px rgba(0, 0, 0, 0.4);
 
   --border-default: rgba(255, 255, 255, 0.08);
   --border-subtle: rgba(255, 255, 255, 0.05);
+
+  --blob-1: rgba(30, 58, 138, 0.20);
+  --blob-2: rgba(88, 28, 135, 0.10);
+
+  --text-gradient-from: #fff;
+  --text-gradient-to: #6b7280;
+
+  --btn-primary-bg: #ffffff;
+  --btn-primary-text: #000000;
+  --btn-secondary-bg: rgba(255, 255, 255, 0.05);
+  --btn-secondary-border: rgba(255, 255, 255, 0.10);
+  --btn-secondary-text: #ffffff;
+
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-border: rgba(255, 255, 255, 0.08);
+
+  color-scheme: dark;
+}
+
+/* Light mode */
+.light {
+  --bg-color: #FDFDFB;
+  --bg-surface: #FDFDFB;
+  --bg-elevated: #f5f5f5;
+  --text-primary: #000000;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+
+  --glass-bg: rgba(255, 255, 255, 0.70);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.02);
+  --glass-shadow-hover:
+    0 30px 70px rgba(0, 0, 0, 0.08),
+    0 4px 8px rgba(0, 0, 0, 0.03);
+
+  --border-default: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.05);
+
+  --blob-1: rgba(147, 197, 253, 0.30);
+  --blob-2: rgba(196, 181, 253, 0.20);
+
+  --text-gradient-from: #000;
+  --text-gradient-to: #6b7280;
+
+  --btn-primary-bg: #000000;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: rgba(0, 0, 0, 0.05);
+  --btn-secondary-border: rgba(0, 0, 0, 0.08);
+  --btn-secondary-text: #000000;
+
+  --input-bg: rgba(0, 0, 0, 0.03);
+  --input-border: rgba(0, 0, 0, 0.08);
+
+  color-scheme: light;
 }
 
 /* ─── Base ─── */
@@ -22,15 +85,15 @@ html, body {
   height: 100%;
   background-color: var(--bg-color);
   color: var(--text-primary);
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
+::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 4px; }
 
-/* ─── Atmospheric Blobs (exact from ClientLayout.tsx) ─── */
+/* ─── Atmospheric Blobs ─── */
 .atmosphere-blob-1 {
   position: fixed;
   top: -10%;
@@ -40,8 +103,9 @@ html, body {
   border-radius: 9999px;
   filter: blur(120px);
   pointer-events: none;
-  background: rgba(30, 58, 138, 0.20); /* blue-900/20 */
+  background: var(--blob-1);
   animation: blob1 20s linear infinite;
+  transition: background 1s ease;
 }
 .atmosphere-blob-2 {
   position: fixed;
@@ -52,8 +116,9 @@ html, body {
   border-radius: 9999px;
   filter: blur(150px);
   pointer-events: none;
-  background: rgba(88, 28, 135, 0.10); /* purple-900/10 */
+  background: var(--blob-2);
   animation: blob2 25s linear infinite;
+  transition: background 1s ease;
 }
 
 @keyframes blob1 {
@@ -67,17 +132,7 @@ html, body {
   66% { transform: scale(1.1) translate(15px, -15px); }
 }
 
-/* ─── Liquid Glass (blur(60px) saturate(180%) — exact from TopNavbar) ─── */
-.liquid-glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(60px) saturate(180%);
-  -webkit-backdrop-filter: blur(60px) saturate(180%);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  transition: all 0.5s ease;
-}
-
-/* ─── Glass Card (for content cards) ─── */
+/* ─── Glass Card ─── */
 .glass-card {
   background: var(--glass-bg);
   backdrop-filter: blur(60px) saturate(180%);
@@ -87,12 +142,16 @@ html, body {
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .glass-card:hover {
+  box-shadow: var(--glass-shadow-hover);
+  transform: translateY(-4px);
+}
+.dark .glass-card:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.12);
-  transform: translateY(-4px);
-  box-shadow:
-    inset 0 0 30px rgba(255, 255, 255, 0.03),
-    0 40px 120px rgba(0, 0, 0, 0.4);
+}
+.light .glass-card:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.12);
 }
 
 /* ─── Hover Lift ─── */
@@ -101,10 +160,10 @@ html, body {
 }
 .hover-lift:hover {
   transform: translateY(-6px);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
 }
 
-/* ─── Stagger Children Animation ─── */
+/* ─── Stagger Children ─── */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -119,24 +178,23 @@ html, body {
 .stagger-children > *:nth-child(5) { animation-delay: 320ms; }
 .stagger-children > *:nth-child(6) { animation-delay: 400ms; }
 
-/* ─── Nav Link Style (10px uppercase tracking) ─── */
+/* ─── Nav Link ─── */
 .nav-link {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: #9ca3af;
+  color: var(--text-secondary);
   transition: color 0.3s ease;
 }
 .nav-link:hover, .nav-link.active {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
-/* ─── Button Styles ─── */
+/* ─── Buttons ─── */
 .btn-primary {
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  color: #ffffff;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -144,8 +202,14 @@ html, body {
   transition: all 0.3s ease;
 }
 .btn-primary:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.15);
+  opacity: 0.85;
+}
+
+.btn-secondary {
+  background: var(--btn-secondary-bg);
+  border: 1px solid var(--btn-secondary-border);
+  color: var(--btn-secondary-text);
+  transition: all 0.3s ease;
 }
 
 .btn-emerald {
@@ -161,22 +225,46 @@ html, body {
 
 /* ─── Stat Card ─── */
 .stat-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
+  border: 1px solid var(--border-subtle);
   backdrop-filter: blur(12px);
   transition: all 0.3s ease;
 }
 .stat-card:hover {
-  border-color: rgba(255, 255, 255, 0.10);
+  border-color: var(--border-default);
 }
 
-/* ─── Emerald accent for trust/verified ─── */
-.accent-emerald {
-  color: #10b981;
+/* ─── Theme Toggle ─── */
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--btn-secondary-bg);
+  border: 1px solid var(--btn-secondary-border);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.theme-toggle:hover {
+  opacity: 0.8;
+}
+.theme-toggle:active {
+  transform: scale(0.9);
 }
 
-/* ─── Tier Colors ─── */
+/* ─── Tier colors (universal) ─── */
 .tier-guardian { color: #fbbf24; }
 .tier-verified { color: #10b981; }
 .tier-trusted { color: #6d8aff; }
-.tier-new { color: #9ca3af; }
+.tier-new { color: var(--text-secondary); }
+
+/* ─── Themed text helpers ─── */
+.text-themed { color: var(--text-primary); }
+.text-themed-secondary { color: var(--text-secondary); }
+.text-themed-muted { color: var(--text-muted); }
+.bg-themed { background-color: var(--bg-color); }
+.border-themed { border-color: var(--border-default); }
+.border-themed-subtle { border-color: var(--border-subtle); }
