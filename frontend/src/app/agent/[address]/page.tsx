@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { AGENTS, JOBS, SKILLS, getAgentByAddress, getFeeTierColor, getReputationColor, truncateAddress } from '@/lib/mock-data';
+import { AGENTS, JOBS, SKILLS, REVIEWS, getAgentByAddress, getFeeTierColor, getReputationColor, getReviewsForAgent, truncateAddress } from '@/lib/mock-data';
 import { useState } from 'react';
 
 type Tab = 'skills' | 'history' | 'reviews';
@@ -98,8 +98,16 @@ export default function AgentProfilePage() {
   const address = params.address as string;
   const [activeTab, setActiveTab] = useState<Tab>('skills');
 
+  const [hireModalOpen, setHireModalOpen] = useState(false);
+  const [hireForm, setHireForm] = useState({ description: '', reward: '', skill: '' });
+
   let agent = getAgentByAddress(address);
   if (!agent) agent = AGENTS[0];
+
+  const agentReviews = getReviewsForAgent(agent.address);
+  const avgRating = agentReviews.length > 0
+    ? agentReviews.reduce((sum, r) => sum + r.rating, 0) / agentReviews.length
+    : 0;
 
   const agentJobs = JOBS.filter(
     (job) =>
@@ -155,6 +163,16 @@ export default function AgentProfilePage() {
                 <p className="text-gray-500 text-sm mt-1">
                   Registered {new Date(agent.joinedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} · Token Bound Account on XLayer
                 </p>
+                {/* Hire Button */}
+                <button
+                  onClick={() => setHireModalOpen(true)}
+                  className="mt-3 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-gray-950 font-semibold text-sm hover:from-amber-400 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 flex items-center gap-2 w-fit"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Hire This Agent
+                </button>
               </div>
 
               {/* Reputation ring — desktop */}
@@ -316,43 +334,157 @@ export default function AgentProfilePage() {
 
         {/* === REVIEWS TAB === */}
         {activeTab === 'reviews' && (
-          <div className="space-y-3">
-            {agentJobs.filter(j => j.buyerRating || j.workerRating).length > 0 ? (
-              agentJobs.filter(j => j.buyerRating || j.workerRating).map((job) => (
-                <div key={job.id} className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-sm">
-                        {SKILLS.find(s => s.name === job.requiredSkill)?.icon || '💼'}
-                      </div>
-                      <div>
-                        <p className="text-white text-sm font-medium">{job.description}</p>
-                        <p className="text-gray-600 text-xs">{job.requiredSkill} · {job.reward} OKB</p>
-                      </div>
-                    </div>
-                    <span className="text-emerald-400 text-xs bg-emerald-500/10 px-2 py-0.5 rounded-md">Completed</span>
+          <div>
+            {/* Review summary */}
+            {agentReviews.length > 0 && (
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
+                <div className="flex items-center gap-6">
+                  <div className="text-center">
+                    <p className="text-4xl font-bold text-amber-400">{avgRating.toFixed(1)}</p>
+                    <StarRating rating={avgRating} />
+                    <p className="text-gray-500 text-xs mt-1">{agentReviews.length} reviews</p>
                   </div>
-                  <div className="flex items-center gap-6 pt-3 border-t border-gray-800">
-                    {job.buyerRating && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500 text-xs">Buyer → Worker:</span>
-                        <StarRating rating={job.buyerRating} />
-                      </div>
-                    )}
-                    {job.workerRating && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500 text-xs">Worker → Buyer:</span>
-                        <StarRating rating={job.workerRating} />
-                      </div>
-                    )}
+                  <div className="flex-1 space-y-1.5">
+                    {[5, 4, 3, 2, 1].map((star) => {
+                      const count = agentReviews.filter(r => r.rating === star).length;
+                      const pct = agentReviews.length > 0 ? (count / agentReviews.length) * 100 : 0;
+                      return (
+                        <div key={star} className="flex items-center gap-2">
+                          <span className="text-gray-500 text-xs w-3">{star}</span>
+                          <svg className="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-amber-500 rounded-full" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-gray-600 text-xs w-6 text-right">{count}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-16 bg-gray-900 border border-gray-800 rounded-2xl">
-                <p className="text-gray-500 text-lg">No reviews yet</p>
               </div>
             )}
+
+            {/* Individual reviews */}
+            <div className="space-y-3">
+              {agentReviews.length > 0 ? agentReviews.map((review) => (
+                <div key={review.id} className="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-all">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-blue-400">
+                      {review.fromName.charAt(0)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-white text-sm font-medium">{review.fromName}</p>
+                          <p className="text-gray-600 text-xs">{new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        </div>
+                        <StarRating rating={review.rating} />
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-gray-300 text-sm leading-relaxed mb-3">&ldquo;{review.comment}&rdquo;</p>
+                  <div className="flex items-center gap-3 pt-3 border-t border-gray-800">
+                    <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 text-xs">
+                      {SKILLS.find(s => s.name === review.skillUsed)?.icon} {review.skillUsed}
+                    </span>
+                    <span className="text-gray-600 text-xs">{review.jobDescription}</span>
+                  </div>
+                </div>
+              )) : (
+                <div className="text-center py-16 bg-gray-900 border border-gray-800 rounded-2xl">
+                  <p className="text-gray-500 text-lg">No reviews yet</p>
+                  <p className="text-gray-600 text-sm mt-1">Be the first to hire and review this agent</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* === HIRE MODAL === */}
+        {hireModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setHireModalOpen(false)} />
+            <div className="relative bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-lg">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-white">Hire {agent.name}</h2>
+                  <p className="text-gray-500 text-sm">Post a job for this agent</p>
+                </div>
+                <button onClick={() => setHireModalOpen(false)} className="text-gray-400 hover:text-white p-1">✕</button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-gray-400 text-sm mb-1.5 block">Required Skill</label>
+                  <select
+                    value={hireForm.skill}
+                    onChange={(e) => setHireForm(prev => ({ ...prev, skill: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm focus:border-amber-500 focus:outline-none"
+                  >
+                    <option value="">Select a skill this agent has...</option>
+                    {agent.equippedSkills.map((s) => (
+                      <option key={s} value={s}>{SKILLS.find(sk => sk.name === s)?.icon} {s}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-gray-400 text-sm mb-1.5 block">Job Description</label>
+                  <textarea
+                    value={hireForm.description}
+                    onChange={(e) => setHireForm(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Describe what you need done..."
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm focus:border-amber-500 focus:outline-none resize-none placeholder:text-gray-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-gray-400 text-sm mb-1.5 block">Reward (OKB)</label>
+                  <input
+                    type="number"
+                    value={hireForm.reward}
+                    onChange={(e) => setHireForm(prev => ({ ...prev, reward: e.target.value }))}
+                    placeholder="0.0"
+                    className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm focus:border-amber-500 focus:outline-none placeholder:text-gray-600"
+                  />
+                </div>
+
+                {/* Fee preview */}
+                {hireForm.reward && (
+                  <div className="bg-gray-800/50 rounded-xl p-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Reward</span>
+                      <span className="text-white">{hireForm.reward} OKB</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Platform fee ({agent.feeTier === 'Guardian' ? '1%' : agent.feeTier === 'Verified' ? '2%' : agent.feeTier === 'Trusted' ? '3%' : '5%'})</span>
+                      <span className="text-gray-500">
+                        {(parseFloat(hireForm.reward) * (agent.feeTier === 'Guardian' ? 0.01 : agent.feeTier === 'Verified' ? 0.02 : agent.feeTier === 'Trusted' ? 0.03 : 0.05)).toFixed(3)} OKB
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm pt-2 border-t border-gray-700">
+                      <span className="text-gray-300 font-medium">Agent receives</span>
+                      <span className="text-amber-400 font-medium">
+                        {(parseFloat(hireForm.reward) * (1 - (agent.feeTier === 'Guardian' ? 0.01 : agent.feeTier === 'Verified' ? 0.02 : agent.feeTier === 'Trusted' ? 0.03 : 0.05))).toFixed(3)} OKB
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => {
+                    alert(`Job posted for ${agent.name}! (Demo — connect wallet to post on-chain)`);
+                    setHireModalOpen(false);
+                  }}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-gray-950 font-semibold hover:from-amber-400 hover:to-orange-500 transition-all"
+                >
+                  Post Job & Lock Escrow
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

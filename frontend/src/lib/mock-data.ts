@@ -248,6 +248,94 @@ export const AGENTS: Agent[] = [
   },
 ];
 
+export interface Review {
+  id: string;
+  fromAddress: string;
+  fromName: string;
+  toAddress: string;
+  rating: number;
+  comment: string;
+  jobDescription: string;
+  skillUsed: string;
+  createdAt: string;
+}
+
+export const REVIEWS: Review[] = [
+  {
+    id: 'rev-1',
+    fromAddress: '0x7890...1234',
+    fromName: 'DeFiWhale.eth',
+    toAddress: '0x1234567890abcdef1234567890abcdef12345678',
+    rating: 5,
+    comment: 'Incredibly fast swap routing. Saved me 0.3 OKB on slippage alone. Will hire again.',
+    jobDescription: 'Optimize swap routes for $100k USDT to OKB',
+    skillUsed: 'DeFi Routing',
+    createdAt: '2024-03-14T18:30:00Z',
+  },
+  {
+    id: 'rev-2',
+    fromAddress: '0x4567...8901',
+    fromName: 'BuilderDAO.xlayer',
+    toAddress: '0x1234567890abcdef1234567890abcdef12345678',
+    rating: 5,
+    comment: 'Top-tier data analysis. The market sentiment report was detailed and actionable.',
+    jobDescription: 'Generate weekly market analysis report',
+    skillUsed: 'Data Analysis',
+    createdAt: '2024-03-13T12:00:00Z',
+  },
+  {
+    id: 'rev-3',
+    fromAddress: '0x2345...6789',
+    fromName: 'Trader_Mike',
+    toAddress: '0x1234567890abcdef1234567890abcdef12345678',
+    rating: 4,
+    comment: 'Good execution on the DCA strategy. Minor delay on day 3 but recovered well.',
+    jobDescription: 'Execute DCA strategy for 10 ETH over 7 days',
+    skillUsed: 'Token Trading',
+    createdAt: '2024-03-10T09:15:00Z',
+  },
+  {
+    id: 'rev-4',
+    fromAddress: '0x3456...7890',
+    fromName: 'NFTCollector',
+    toAddress: '0xabcdef1234567890abcdef1234567890abcdef12',
+    rating: 5,
+    comment: 'Found a critical reentrancy bug in our NFT marketplace. Saved us from a potential exploit.',
+    jobDescription: 'Audit smart contract for new DEX launch',
+    skillUsed: 'Smart Contract Audit',
+    createdAt: '2024-03-12T14:00:00Z',
+  },
+  {
+    id: 'rev-5',
+    fromAddress: '0x5678...9012',
+    fromName: 'SafeSwap.xyz',
+    toAddress: '0xabcdef1234567890abcdef1234567890abcdef12',
+    rating: 5,
+    comment: 'Thorough security scan. Identified honeypot patterns we completely missed. Highly recommend.',
+    jobDescription: 'Scan new token contract before investment',
+    skillUsed: 'Security Scanning',
+    createdAt: '2024-03-11T16:30:00Z',
+  },
+  {
+    id: 'rev-6',
+    fromAddress: '0x6789...0123',
+    fromName: 'ContentDAO',
+    toAddress: '0x9876543210fedcba9876543210fedcba98765432',
+    rating: 4,
+    comment: 'Great social media content. Could improve on the visual assets but writing was excellent.',
+    jobDescription: 'Create social media content for NFT collection launch',
+    skillUsed: 'Content Creation',
+    createdAt: '2024-03-09T11:00:00Z',
+  },
+];
+
+export function getReviewsForAgent(address: string): Review[] {
+  return REVIEWS.filter(r =>
+    r.toAddress.toLowerCase() === address.toLowerCase() ||
+    r.toAddress.toLowerCase().includes(address.toLowerCase().replace('0x', '').slice(0, 8))
+  );
+}
+
 export const STATS = {
   totalJobs: 1247,
   totalSkills: 86,
