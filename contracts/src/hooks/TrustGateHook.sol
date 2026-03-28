@@ -34,6 +34,9 @@ contract TrustGateHook is Ownable2Step {
 
     ITrustGateOracle public oracle;
 
+    /// @notice Maximum valid trust score from oracle (TGH-04 fix)
+    uint256 public constant MAX_TRUST_SCORE = 100;
+
     /// @notice Fee tiers in basis points (1 bps = 0.01%)
     uint24 public constant FEE_GUARDIAN  = 100;    // 0.01% — top tier
     uint24 public constant FEE_VERIFIED  = 500;    // 0.05%
@@ -101,6 +104,9 @@ contract TrustGateHook is Ownable2Step {
 
         // Read reputation from oracle
         try oracle.getUserReputation(account) returns (uint256 score, uint256 lastUpdated) {
+            // TGH-04 fix: Cap score to prevent oracle returning inflated values
+            if (score > MAX_TRUST_SCORE) score = MAX_TRUST_SCORE;
+
             // If score is stale, use default (trusted) fee
             if (block.timestamp - lastUpdated > maxScoreAge) {
                 emit FeeLookup(account, score, FEE_TRUSTED, "Stale");
@@ -138,6 +144,7 @@ contract TrustGateHook is Ownable2Step {
         }
 
         try oracle.getUserReputation(account) returns (uint256 score, uint256 lastUpdated) {
+            if (score > MAX_TRUST_SCORE) score = MAX_TRUST_SCORE;
             if (block.timestamp - lastUpdated > maxScoreAge) return (FEE_TRUSTED, "Stale");
             if (score >= thresholdGuardian) return (FEE_GUARDIAN, "Guardian");
             if (score >= thresholdVerified) return (FEE_VERIFIED, "Verified");
