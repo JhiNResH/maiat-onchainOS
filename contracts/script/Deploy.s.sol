@@ -4,6 +4,7 @@ pragma solidity ^0.8.26;
 import "forge-std/Script.sol";
 import "../src/core/ReputationEngine.sol";
 import "../src/dojo/SkillRegistry.sol";
+import "../src/dojo/AgentTBA.sol";
 import "../src/core/JobMarket.sol";
 import "../src/core/TrustScoreOracle.sol";
 import "../src/identity/AgentIdentity.sol";
@@ -28,10 +29,13 @@ contract Deploy is Script {
         // 4. Authorize JobMarket to update reputation
         reputationEngine.setAuthorizedCaller(address(jobMarket), true);
 
-        // 5. Deploy TrustScoreOracle
+        // 5. Deploy AgentTBA (ERC-6551)
+        AgentTBA agentTBA = new AgentTBA(address(skillRegistry));
+
+        // 6. Deploy TrustScoreOracle
         TrustScoreOracle oracle = new TrustScoreOracle(msg.sender);
 
-        // 6. Deploy AgentIdentity
+        // 7. Deploy AgentIdentity
         AgentIdentity identity = new AgentIdentity(msg.sender);
 
         vm.stopBroadcast();
@@ -39,6 +43,7 @@ contract Deploy is Script {
         console.log("=== Maiat XLayer Deployment ===");
         console.log("ReputationEngine:", address(reputationEngine));
         console.log("SkillRegistry:   ", address(skillRegistry));
+        console.log("AgentTBA:        ", address(agentTBA));
         console.log("JobMarket:       ", address(jobMarket));
         console.log("TrustScoreOracle:", address(oracle));
         console.log("AgentIdentity:   ", address(identity));
