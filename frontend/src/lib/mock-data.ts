@@ -1,227 +1,224 @@
-// Mock data for Maiat XLayer Hackathon Demo
+// Mock data for Maiat onchainOS — Pixel Tamagotchi Edition
 
-export interface SkillEdition {
-  skillId: number;
-  name: string;
-  description: string;
-  price: number;
-  royaltyBps: number;
-  totalMinted: number;
-  maxSupply: number | null; // null = unlimited
-  icon: string;
-  category: string;
+export type TierName = 'Kozo' | 'Senpai' | 'Tatsujin' | 'Sensei';
+
+export interface TierInfo {
+  name: TierName;
+  emoji: string;
+  label: string;
+  fee: string;
+  minTrust: number;
+  scarabCost: number;
+  color: string;
 }
 
-export interface Skill {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  royalty: number;
-  creator: string;
-  totalBuyers: number;
-  rating: number;
-  category: string;
-  icon: string;
+export const TIERS: Record<TierName, TierInfo> = {
+  Kozo:     { name: 'Kozo',     emoji: '🥚', label: '小僧', fee: '5%', minTrust: 0,  scarabCost: 0,     color: '#A0AEC0' },
+  Senpai:   { name: 'Senpai',   emoji: '⭐', label: '先輩', fee: '3%', minTrust: 25, scarabCost: 100,   color: '#64B5F6' },
+  Tatsujin: { name: 'Tatsujin', emoji: '🦸', label: '達人', fee: '2%', minTrust: 60, scarabCost: 1000,  color: '#B388FF' },
+  Sensei:   { name: 'Sensei',   emoji: '👑', label: '先生', fee: '1%', minTrust: 85, scarabCost: 10000, color: '#FFD54F' },
+};
+
+export function getTier(trust: number): TierInfo {
+  if (trust >= 85) return TIERS.Sensei;
+  if (trust >= 60) return TIERS.Tatsujin;
+  if (trust >= 25) return TIERS.Senpai;
+  return TIERS.Kozo;
 }
 
-export interface Job {
+export type SkillType = 'Hard' | 'Operational' | 'Performance';
+
+export interface SoulboundSkill {
   id: string;
-  description: string;
-  reward: number;
-  requiredSkill: string;
-  buyer: string;
-  worker?: string;
-  status: 'open' | 'in_progress' | 'completed' | 'disputed';
-  buyerRating?: number;
-  workerRating?: number;
-  createdAt: string;
-  deadline?: string;
+  name: string;
+  icon: string;
+  category: string;
+  type: SkillType;
+  stars: number; // 1-5
+  certified: boolean;
 }
 
 export interface Agent {
   address: string;
   name: string;
-  reputation: number;
-  equippedSkills: string[];
+  trust: number;
+  scarab: number;
+  scarabBurned: number;
+  skills: SoulboundSkill[];
   completedJobs: number;
   totalEarnings: number;
-  feeTier: 'Guardian' | 'Verified' | 'Trusted' | 'New';
-  joinedAt: string;
-  skillRatings: Record<string, number>;
-  bio?: string;
-  banner?: string;
-  skillEditions: SkillEdition[];
+  avgRating: number;
+  registeredDays: number;
+  status: 'active' | 'busy' | 'offline';
+  category: string; // primary domain
+  // Trust breakdown
+  trackRecord: number;
+  specialization: number;
+  consistency: number;
+  // Activity log
+  recentActivity: { text: string; type: 'success' | 'warning' | 'info' }[];
 }
 
 export const AGENTS: Agent[] = [
   {
     address: '0x1234567890abcdef1234567890abcdef12345678',
-    name: 'AlphaTrader.eth',
-    bio: 'Top-tier DeFi agent specializing in optimal swap routing, algorithmic trading, and on-chain analytics. Guardian tier — 0.01% fee.',
-    reputation: 92,
-    equippedSkills: ['DeFi Routing', 'Token Trading', 'Data Analysis'],
-    completedJobs: 156,
+    name: '0xAlpha.eth',
+    trust: 92,
+    scarab: 12500,
+    scarabBurned: 10000,
+    skills: [
+      { id: 's1', name: 'DeFi Routing', icon: '🔀', category: 'DeFi', type: 'Hard', stars: 5, certified: true },
+      { id: 's2', name: 'Token Trading', icon: '📈', category: 'Trading', type: 'Performance', stars: 4, certified: true },
+      { id: 's3', name: 'Data Analysis', icon: '📊', category: 'Analytics', type: 'Hard', stars: 5, certified: true },
+      { id: 's4', name: 'MEV Protection', icon: '🛡️', category: 'Security', type: 'Operational', stars: 4, certified: true },
+    ],
+    completedJobs: 312,
     totalEarnings: 234.5,
-    feeTier: 'Guardian',
-    joinedAt: '2024-01-15',
-    skillRatings: {
-      'DeFi Routing': 4.9,
-      'Token Trading': 4.7,
-      'Data Analysis': 4.8,
-    },
-    skillEditions: [
-      { skillId: 1, name: 'DeFi Routing', description: 'Optimal swap routing across DEXs with MEV protection', price: 0.5, royaltyBps: 500, totalMinted: 47, maxSupply: 100, icon: '🔀', category: 'DeFi' },
-      { skillId: 5, name: 'Token Trading', description: 'Algorithmic trading with risk management', price: 1.5, royaltyBps: 800, totalMinted: 34, maxSupply: 50, icon: '📈', category: 'Trading' },
-      { skillId: 3, name: 'Data Analysis', description: 'On-chain analytics and market sentiment', price: 0.3, royaltyBps: 300, totalMinted: 89, maxSupply: null, icon: '📊', category: 'Analytics' },
+    avgRating: 4.8,
+    registeredDays: 128,
+    status: 'active',
+    category: 'DeFi',
+    trackRecord: 95,
+    specialization: 90,
+    consistency: 88,
+    recentActivity: [
+      { text: 'JOB #312 COMPLETE — ★★★★★ — +20 SCARAB', type: 'success' },
+      { text: 'SKILL UPGRADED: DATA ANALYSIS ★★★★ → ★★★★★', type: 'success' },
+      { text: 'TRUST UPDATED: 90 → 92 (+2)', type: 'info' },
+      { text: 'EVOLVED TO SENSEI 👑', type: 'success' },
     ],
   },
   {
     address: '0xabcdef1234567890abcdef1234567890abcdef12',
-    name: 'SecurityBot.xlayer',
-    bio: 'Automated security auditor. Slither + formal verification + exploit detection. Found 47 critical bugs across 89 audits.',
-    reputation: 88,
-    equippedSkills: ['Smart Contract Audit', 'Security Scanning'],
-    completedJobs: 89,
-    totalEarnings: 178.2,
-    feeTier: 'Verified',
-    joinedAt: '2024-02-01',
-    skillRatings: {
-      'Smart Contract Audit': 4.9,
-      'Security Scanning': 4.8,
-    },
-    skillEditions: [
-      { skillId: 2, name: 'Smart Contract Audit', description: 'Automated vulnerability scanning with formal verification', price: 2.0, royaltyBps: 1000, totalMinted: 23, maxSupply: 30, icon: '🛡️', category: 'Security' },
-      { skillId: 6, name: 'Security Scanning', description: 'Real-time threat detection and honeypot analysis', price: 0.8, royaltyBps: 600, totalMinted: 62, maxSupply: 100, icon: '🔒', category: 'Security' },
+    name: 'Satoshi.eth',
+    trust: 94,
+    scarab: 15200,
+    scarabBurned: 10000,
+    skills: [
+      { id: 's5', name: 'Smart Contract Audit', icon: '🛡️', category: 'Security', type: 'Hard', stars: 5, certified: true },
+      { id: 's6', name: 'Security Scanning', icon: '🔒', category: 'Security', type: 'Operational', stars: 5, certified: true },
+      { id: 's7', name: 'Exploit Detection', icon: '🐛', category: 'Security', type: 'Hard', stars: 4, certified: true },
+    ],
+    completedJobs: 287,
+    totalEarnings: 445.2,
+    avgRating: 4.9,
+    registeredDays: 200,
+    status: 'active',
+    category: 'Security',
+    trackRecord: 96,
+    specialization: 95,
+    consistency: 90,
+    recentActivity: [
+      { text: 'JOB #287 COMPLETE — ★★★★★ — +20 SCARAB', type: 'success' },
+      { text: 'FOUND CRITICAL BUG IN DEX CONTRACT', type: 'success' },
+      { text: 'TRUST UPDATED: 93 → 94 (+1)', type: 'info' },
     ],
   },
   {
     address: '0x9876543210fedcba9876543210fedcba98765432',
     name: 'ContentMaster.ai',
-    bio: 'AI content creator for Web3. Social media, docs, marketing. 234 jobs completed with 4.5 avg rating.',
-    reputation: 75,
-    equippedSkills: ['Content Creation', 'Data Analysis'],
-    completedJobs: 234,
+    trust: 75,
+    scarab: 2800,
+    scarabBurned: 1000,
+    skills: [
+      { id: 's8', name: 'Content Creation', icon: '✍️', category: 'Content', type: 'Hard', stars: 4, certified: true },
+      { id: 's9', name: 'SEO Optimization', icon: '🔍', category: 'Content', type: 'Performance', stars: 3, certified: true },
+    ],
+    completedJobs: 203,
     totalEarnings: 156.8,
-    feeTier: 'Trusted',
-    joinedAt: '2024-02-20',
-    skillRatings: {
-      'Content Creation': 4.5,
-      'Data Analysis': 4.4,
-    },
-    skillEditions: [
-      { skillId: 4, name: 'Content Creation', description: 'AI-powered content for social media and marketing', price: 0.2, royaltyBps: 200, totalMinted: 156, maxSupply: null, icon: '✍️', category: 'Content' },
-      { skillId: 3, name: 'Data Analysis', description: 'On-chain analytics and wallet profiling', price: 0.3, royaltyBps: 300, totalMinted: 89, maxSupply: null, icon: '📊', category: 'Analytics' },
+    avgRating: 4.5,
+    registeredDays: 95,
+    status: 'busy',
+    category: 'Content',
+    trackRecord: 78,
+    specialization: 72,
+    consistency: 70,
+    recentActivity: [
+      { text: 'JOB #203 COMPLETE — ★★★★☆ — +15 SCARAB', type: 'success' },
+      { text: 'SKILL WARNING: SEO ★★★☆☆ (DECLINING)', type: 'warning' },
     ],
   },
   {
     address: '0xfedcba9876543210fedcba9876543210fedcba98',
-    name: 'BridgeRunner.okx',
-    bio: 'Cross-chain specialist. Optimal bridge routing with security verification. New agent building reputation.',
-    reputation: 45,
-    equippedSkills: ['Cross-Chain Bridge', 'Security Scanning'],
-    completedJobs: 12,
-    totalEarnings: 18.5,
-    feeTier: 'New',
-    joinedAt: '2024-03-10',
-    skillRatings: {
-      'Cross-Chain Bridge': 4.2,
-      'Security Scanning': 4.0,
-    },
-    skillEditions: [
-      { skillId: 8, name: 'Cross-Chain Bridge', description: 'Secure asset bridging across chains', price: 1.0, royaltyBps: 700, totalMinted: 28, maxSupply: 50, icon: '🌉', category: 'Infrastructure' },
-      { skillId: 6, name: 'Security Scanning', description: 'Pre-bridge security verification', price: 0.8, royaltyBps: 600, totalMinted: 62, maxSupply: 100, icon: '🔒', category: 'Security' },
+    name: 'BridgeBot.world',
+    trust: 82,
+    scarab: 4200,
+    scarabBurned: 1000,
+    skills: [
+      { id: 's10', name: 'Cross-Chain Bridge', icon: '🌉', category: 'Infrastructure', type: 'Operational', stars: 4, certified: true },
+      { id: 's11', name: 'Gas Optimization', icon: '⛽', category: 'Infrastructure', type: 'Performance', stars: 5, certified: true },
+      { id: 's12', name: 'Route Finding', icon: '🗺️', category: 'Infrastructure', type: 'Hard', stars: 4, certified: true },
+    ],
+    completedJobs: 156,
+    totalEarnings: 98.3,
+    avgRating: 4.6,
+    registeredDays: 80,
+    status: 'active',
+    category: 'Infrastructure',
+    trackRecord: 85,
+    specialization: 80,
+    consistency: 78,
+    recentActivity: [
+      { text: 'JOB #156 COMPLETE — ★★★★★ — +20 SCARAB', type: 'success' },
+      { text: 'TRUST UPDATED: 80 → 82 (+2)', type: 'info' },
+    ],
+  },
+  {
+    address: '0x1111222233334444555566667777888899990000',
+    name: 'DeliveryBot.serve',
+    trust: 71,
+    scarab: 1800,
+    scarabBurned: 100,
+    skills: [
+      { id: 's13', name: 'Delivery Ops', icon: '🚚', category: 'Delivery', type: 'Operational', stars: 4, certified: true },
+      { id: 's14', name: 'Route Planning', icon: '📍', category: 'Delivery', type: 'Hard', stars: 3, certified: true },
+    ],
+    completedJobs: 98,
+    totalEarnings: 45.2,
+    avgRating: 4.3,
+    registeredDays: 60,
+    status: 'active',
+    category: 'Delivery',
+    trackRecord: 74,
+    specialization: 68,
+    consistency: 70,
+    recentActivity: [
+      { text: 'JOB #98 COMPLETE — ★★★★☆ — +15 SCARAB', type: 'success' },
+      { text: 'DELIVERY SUCCESS RATE: 96%', type: 'info' },
+    ],
+  },
+  {
+    address: '0xaaaa1111bbbb2222cccc3333dddd4444eeee5555',
+    name: 'NewKid.world',
+    trust: 15,
+    scarab: 45,
+    scarabBurned: 0,
+    skills: [
+      { id: 's15', name: 'Data Entry', icon: '⌨️', category: 'General', type: 'Hard', stars: 2, certified: true },
+    ],
+    completedJobs: 5,
+    totalEarnings: 1.2,
+    avgRating: 3.8,
+    registeredDays: 7,
+    status: 'active',
+    category: 'General',
+    trackRecord: 20,
+    specialization: 10,
+    consistency: 15,
+    recentActivity: [
+      { text: 'JOB #5 COMPLETE — ★★★★☆ — +10 SCARAB', type: 'success' },
+      { text: 'REGISTERED AS KOZO 🥚', type: 'info' },
     ],
   },
 ];
 
-// Flatten skills from agents for backward compatibility
-export const SKILLS: Skill[] = [
-  { id: 'skill-1', name: 'DeFi Routing', description: 'Optimal swap routing across DEXs with MEV protection and slippage optimization', price: 0.5, royalty: 5, creator: '0x1234...5678', totalBuyers: 47, rating: 4.8, category: 'DeFi', icon: '🔀' },
-  { id: 'skill-2', name: 'Smart Contract Audit', description: 'Automated vulnerability scanning with formal verification and exploit detection', price: 2.0, royalty: 10, creator: '0xabcd...ef01', totalBuyers: 23, rating: 4.9, category: 'Security', icon: '🛡️' },
-  { id: 'skill-3', name: 'Data Analysis', description: 'On-chain analytics, wallet profiling, and market sentiment analysis', price: 0.3, royalty: 3, creator: '0x9876...5432', totalBuyers: 89, rating: 4.6, category: 'Analytics', icon: '📊' },
-  { id: 'skill-4', name: 'Content Creation', description: 'AI-powered content generation for social media, docs, and marketing', price: 0.2, royalty: 2, creator: '0xfedc...ba98', totalBuyers: 156, rating: 4.4, category: 'Content', icon: '✍️' },
-  { id: 'skill-5', name: 'Token Trading', description: 'Algorithmic trading strategies with risk management and portfolio balancing', price: 1.5, royalty: 8, creator: '0x2468...1357', totalBuyers: 34, rating: 4.7, category: 'Trading', icon: '📈' },
-  { id: 'skill-6', name: 'Security Scanning', description: 'Real-time threat detection, honeypot analysis, and rug pull prevention', price: 0.8, royalty: 6, creator: '0x1357...2468', totalBuyers: 62, rating: 4.9, category: 'Security', icon: '🔒' },
-  { id: 'skill-7', name: 'NFT Valuation', description: 'AI-powered NFT appraisal using rarity analysis and market trends', price: 0.4, royalty: 4, creator: '0xaaaa...bbbb', totalBuyers: 41, rating: 4.3, category: 'NFT', icon: '🎨' },
-  { id: 'skill-8', name: 'Cross-Chain Bridge', description: 'Secure asset bridging across chains with optimal fee routing', price: 1.0, royalty: 7, creator: '0xcccc...dddd', totalBuyers: 28, rating: 4.5, category: 'Infrastructure', icon: '🌉' },
-];
-
-export const JOBS: Job[] = [
-  { id: 'job-1', description: 'Audit smart contract for new DEX launch on XLayer', reward: 5.0, requiredSkill: 'Smart Contract Audit', buyer: '0x7890...1234', status: 'open', createdAt: '2024-03-15T10:30:00Z', deadline: '2024-03-22T10:30:00Z' },
-  { id: 'job-2', description: 'Optimize swap routes for $100k USDT to OKB', reward: 2.5, requiredSkill: 'DeFi Routing', buyer: '0x4567...8901', worker: '0x1234...5678', status: 'in_progress', createdAt: '2024-03-14T14:20:00Z', deadline: '2024-03-16T14:20:00Z' },
-  { id: 'job-3', description: 'Generate weekly market analysis report for portfolio', reward: 1.0, requiredSkill: 'Data Analysis', buyer: '0x2345...6789', worker: '0x9876...5432', status: 'completed', buyerRating: 5, workerRating: 5, createdAt: '2024-03-13T09:15:00Z' },
-  { id: 'job-4', description: 'Create social media content for NFT collection launch', reward: 0.8, requiredSkill: 'Content Creation', buyer: '0x3456...7890', status: 'open', createdAt: '2024-03-15T08:00:00Z', deadline: '2024-03-20T08:00:00Z' },
-  { id: 'job-5', description: 'Execute DCA strategy for 10 ETH over 7 days', reward: 3.0, requiredSkill: 'Token Trading', buyer: '0x5678...9012', worker: '0x2468...1357', status: 'in_progress', createdAt: '2024-03-12T16:45:00Z', deadline: '2024-03-19T16:45:00Z' },
-  { id: 'job-6', description: 'Scan new token contract before investment', reward: 0.5, requiredSkill: 'Security Scanning', buyer: '0x6789...0123', worker: '0x1357...2468', status: 'completed', buyerRating: 5, workerRating: 4, createdAt: '2024-03-11T11:30:00Z' },
-];
-
-export interface Review {
-  id: string;
-  fromAddress: string;
-  fromName: string;
-  toAddress: string;
-  rating: number;
-  comment: string;
-  jobDescription: string;
-  skillUsed: string;
-  createdAt: string;
-}
-
-export const REVIEWS: Review[] = [
-  { id: 'rev-1', fromAddress: '0x7890...1234', fromName: 'DeFiWhale.eth', toAddress: '0x1234567890abcdef1234567890abcdef12345678', rating: 5, comment: 'Incredibly fast swap routing. Saved me 0.3 OKB on slippage alone. Will hire again.', jobDescription: 'Optimize swap routes for $100k USDT to OKB', skillUsed: 'DeFi Routing', createdAt: '2024-03-14T18:30:00Z' },
-  { id: 'rev-2', fromAddress: '0x4567...8901', fromName: 'BuilderDAO.xlayer', toAddress: '0x1234567890abcdef1234567890abcdef12345678', rating: 5, comment: 'Top-tier data analysis. The market sentiment report was detailed and actionable.', jobDescription: 'Generate weekly market analysis report', skillUsed: 'Data Analysis', createdAt: '2024-03-13T12:00:00Z' },
-  { id: 'rev-3', fromAddress: '0x2345...6789', fromName: 'Trader_Mike', toAddress: '0x1234567890abcdef1234567890abcdef12345678', rating: 4, comment: 'Good execution on the DCA strategy. Minor delay on day 3 but recovered well.', jobDescription: 'Execute DCA strategy for 10 ETH over 7 days', skillUsed: 'Token Trading', createdAt: '2024-03-10T09:15:00Z' },
-  { id: 'rev-4', fromAddress: '0x3456...7890', fromName: 'NFTCollector', toAddress: '0xabcdef1234567890abcdef1234567890abcdef12', rating: 5, comment: 'Found a critical reentrancy bug in our NFT marketplace. Saved us from a potential exploit.', jobDescription: 'Audit smart contract for new DEX launch', skillUsed: 'Smart Contract Audit', createdAt: '2024-03-12T14:00:00Z' },
-  { id: 'rev-5', fromAddress: '0x5678...9012', fromName: 'SafeSwap.xyz', toAddress: '0xabcdef1234567890abcdef1234567890abcdef12', rating: 5, comment: 'Thorough security scan. Identified honeypot patterns we completely missed.', jobDescription: 'Scan new token contract before investment', skillUsed: 'Security Scanning', createdAt: '2024-03-11T16:30:00Z' },
-  { id: 'rev-6', fromAddress: '0x6789...0123', fromName: 'ContentDAO', toAddress: '0x9876543210fedcba9876543210fedcba98765432', rating: 4, comment: 'Great social media content. Writing was excellent.', jobDescription: 'Create social media content for NFT collection launch', skillUsed: 'Content Creation', createdAt: '2024-03-09T11:00:00Z' },
-];
-
-export function getReviewsForAgent(address: string): Review[] {
-  return REVIEWS.filter(r =>
-    r.toAddress.toLowerCase() === address.toLowerCase() ||
-    r.toAddress.toLowerCase().includes(address.toLowerCase().replace('0x', '').slice(0, 8))
-  );
-}
-
-export const STATS = {
-  totalJobs: 1247,
-  totalSkills: 86,
-  totalAgents: 523,
-  totalVolume: 15420,
-};
+export const CATEGORIES = ['All', 'Security', 'DeFi', 'Content', 'Infrastructure', 'Delivery', 'General'];
 
 export function getAgentByAddress(address: string): Agent | undefined {
-  return AGENTS.find(a => a.address.toLowerCase() === address.toLowerCase() ||
-    a.address.toLowerCase().includes(address.toLowerCase().replace('0x', '')));
+  return AGENTS.find(a => a.address.toLowerCase() === address.toLowerCase());
 }
 
 export function truncateAddress(address: string): string {
-  if (address.length <= 10) return address;
+  if (address.length <= 13) return address;
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
-
-export function getFeeTierColor(tier: Agent['feeTier']): string {
-  switch (tier) {
-    case 'Guardian': return 'text-amber-400 bg-amber-400/10 border-amber-400/30';
-    case 'Verified': return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30';
-    case 'Trusted': return 'text-blue-400 bg-blue-400/10 border-blue-400/30';
-    case 'New': return 'text-gray-400 bg-gray-400/10 border-gray-400/30';
-  }
-}
-
-export function getReputationColor(score: number): string {
-  if (score >= 90) return 'text-amber-400';
-  if (score >= 75) return 'text-emerald-400';
-  if (score >= 50) return 'text-blue-400';
-  return 'text-gray-400';
-}
-
-export function getStatusBadge(status: Job['status']): { text: string; color: string } {
-  switch (status) {
-    case 'open': return { text: 'Open', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' };
-    case 'in_progress': return { text: 'In Progress', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' };
-    case 'completed': return { text: 'Completed', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' };
-    case 'disputed': return { text: 'Disputed', color: 'bg-red-500/20 text-red-400 border-red-500/30' };
-  }
 }

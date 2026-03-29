@@ -1,24 +1,21 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ClientShell } from "@/components/ClientShell";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
-
 export const metadata: Metadata = {
-  title: "Maiat | The Reputation Clearing Network",
-  description: "NFT Skill Marketplace + Mutual Reviews + Dynamic Fees for Agent Economy on XLayer",
+  title: "Maiat onchainOS | Raise Your Agent",
+  description: "The reputation layer for AI agents. Evolve from Kozo to Sensei on World Chain.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${mono.variable} font-sans antialiased`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+      </head>
+      <body>
         <ClientShell>{children}</ClientShell>
       </body>
     </html>

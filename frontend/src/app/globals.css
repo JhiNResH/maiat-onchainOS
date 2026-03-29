@@ -1,186 +1,159 @@
 @import "tailwindcss";
 
-/* ─── Maiat Design System (exact copy from app.maiat.io globals.css) ─── */
+/* ─── Maiat onchainOS — Pixel Tamagotchi Design System ─── */
 
 :root {
-  --bg-color: #FDFDFB;
-  --text-color: #000000;
-  --text-secondary: #9ca3af;
-  --text-muted: #9ca3af;
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-shadow: 
-    0 20px 50px rgba(0, 0, 0, 0.05),
-    0 2px 4px rgba(0, 0, 0, 0.02);
-  --atmosphere-opacity: 0.6;
-  --atmosphere-gradient-1: rgba(16, 185, 129, 0.08);
-  --atmosphere-gradient-2: rgba(59, 130, 246, 0.08);
-  --text-gradient: linear-gradient(to bottom, #000 0%, #6b7280 100%);
-  --rail-color: rgba(0, 0, 0, 0.3);
-  --marquee-border: rgba(0, 0, 0, 0.05);
-  --border-color: rgba(0, 0, 0, 0.08);
-  --card-bg: #FDFDFB;
-  --mesh-color: rgba(0, 0, 0, 0.03);
+  --bg: #E0D4F0;
+  --card: #FFFFFF;
+  --text: #2D2D2D;
+  --text-dim: #5A5A5A;
+  --text-faint: #9A9A9A;
+  --border: #2D2D2D;
+  --border-light: #CCCCCC;
+
+  /* Pastel palette — saturated */
+  --mint: #6FCF87;
+  --pink: #FF8FA0;
+  --peach: #FFB87A;
+  --butter: #FFE04A;
+  --sky: #7AC0E8;
+  --lavender: #A88BCF;
+  --coral: #FF6B5A;
+  --gold: #FFC800;
+  --green: #2E9E42;
+
+  /* Tier colors — stronger contrast */
+  --tier-kozo: #7A8A9A;
+  --tier-senpai: #3B82F6;
+  --tier-tatsujin: #8B5CF6;
+  --tier-sensei: #D97706;
 }
 
-.dark {
-  --bg-color: #0A0A0A;
-  --bg-page: #0A0A0A;
-  --bg-surface: #0A0A0A;
-  --bg-elevated: #111111;
-  --text-color: #ffffff;
-  --text-primary: #ffffff;
-  --text-secondary: #9ca3af;
-  --text-muted: #9ca3af;
-  --border-default: rgba(255, 255, 255, 0.08);
-  --border-subtle: rgba(255, 255, 255, 0.05);
-  --glass-bg: rgba(20, 20, 20, 0.4);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 
-    inset 0 0 30px rgba(255, 255, 255, 0.02),
-    0 30px 100px rgba(0, 0, 0, 0.3);
-  --atmosphere-opacity: 0.4;
-  --atmosphere-gradient-1: rgba(16, 185, 129, 0.1);
-  --atmosphere-gradient-2: rgba(59, 130, 246, 0.1);
-  --text-gradient: linear-gradient(to bottom, #fff 0%, #6b7280 100%);
-  --rail-color: rgba(255, 255, 255, 0.2);
-  --marquee-border: rgba(255, 255, 255, 0.05);
-  --border-color: rgba(255, 255, 255, 0.05);
-  --card-bg: rgba(255, 255, 255, 0.02);
-  --mesh-color: rgba(255, 255, 255, 0.02);
+/* ─── Pixel Font ─── */
+.pixel { font-family: 'Press Start 2P', monospace; }
+.pixel-body { font-family: 'VT323', monospace; }
+
+/* ─── Pixel Card ─── */
+.pxl-card {
+  background: var(--card);
+  border: 3px solid var(--border);
+  image-rendering: pixelated;
 }
 
-/* ─── Liquid Glass ─── */
-.liquid-glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(60px) saturate(180%);
-  -webkit-backdrop-filter: blur(60px) saturate(180%);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  transition: background 0.5s ease, border 0.5s ease, box-shadow 0.5s ease;
+.pxl-card-muted {
+  background: var(--card);
+  border: 2px solid var(--border-light);
 }
 
-/* ─── Atmosphere ─── */
-.atmosphere {
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  background: 
-    radial-gradient(circle at 50% 30%, var(--atmosphere-gradient-1) 0%, transparent 60%),
-    radial-gradient(circle at 10% 80%, var(--atmosphere-gradient-2) 0%, transparent 50%);
-  filter: blur(80px);
-  opacity: var(--atmosphere-opacity);
-  pointer-events: none;
-  transition: opacity 0.5s ease, background 0.5s ease;
+/* ─── Pixel Button ─── */
+.pxl-btn {
+  font-family: 'Press Start 2P', monospace;
+  border: 3px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.1s;
+  image-rendering: pixelated;
 }
 
-/* ─── Atmosphere Text ─── */
-.atmosphere-text {
-  font-weight: 900;
-  letter-spacing: -0.06em;
-  line-height: 1.0;
-  font-size: clamp(3rem, 12vw, 10rem);
-  color: var(--text-color);
-  background: var(--text-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  transition: background 0.5s ease;
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
+.pxl-btn:hover { transform: translateY(-1px); }
+.pxl-btn:active { transform: translateY(2px); }
 
-/* ─── Rail Text ─── */
-.rail-text {
-  writing-mode: vertical-rl;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.3em;
-  color: var(--rail-color);
-  user-select: none;
-  transition: color 0.5s ease;
-}
+.pxl-btn-mint { background: var(--mint); color: var(--text); }
+.pxl-btn-pink { background: var(--pink); color: var(--text); }
+.pxl-btn-sky { background: var(--sky); color: var(--text); }
+.pxl-btn-gold { background: var(--gold); color: var(--text); }
+.pxl-btn-coral { background: var(--coral); color: white; }
 
-/* ─── Marquee ─── */
-.marquee-container {
+/* ─── Pixel Stat Bar ─── */
+.pxl-bar {
+  height: 16px;
+  background: #E8E0F0;
+  border: 2px solid var(--border);
   overflow: hidden;
-  white-space: nowrap;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  border-top: 1px solid var(--marquee-border);
-  border-bottom: 1px solid var(--marquee-border);
-  transition: border 0.5s ease;
-}
-.marquee-content {
-  display: inline-block;
-  min-width: 100%;
-  animation: marquee 30s linear infinite;
-}
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
 }
 
-/* ─── Hover Lift ─── */
-.hover-lift {
-  transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.hover-lift:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.08);
-  border-color: rgba(255, 255, 255, 0.8);
-}
-
-/* ─── Mesh Grid ─── */
-.mesh-grid {
-  background-image: 
-    linear-gradient(var(--mesh-color) 1px, transparent 1px),
-    linear-gradient(90deg, var(--mesh-color) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-
-/* ─── Glass Card (alias for liquid-glass with card-specific styling) ─── */
-.glass-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.glass-card:hover {
-  border-color: rgba(16, 185, 129, 0.3);
-  transform: translateY(-4px);
-}
-
-/* ─── Base ─── */
-html, body {
+.pxl-bar-fill {
   height: 100%;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  transition: background-color 0.7s ease, color 0.7s ease;
+  transition: width 0.8s ease;
 }
 
-body {
+/* ─── Pixel Input ─── */
+.pxl-input {
+  font-family: 'VT323', monospace;
+  background: var(--card);
+  border: 3px solid var(--border);
+  color: var(--text);
+  outline: none;
+}
+
+.pxl-input::placeholder { color: var(--text-faint); }
+.pxl-input:focus { border-color: var(--lavender); }
+
+/* ─── Pixel Select ─── */
+.pxl-select {
+  font-family: 'VT323', monospace;
+  background: var(--card);
+  border: 3px solid var(--border);
+  color: var(--text);
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+/* ─── Pixel Table ─── */
+.pxl-table { border: 3px solid var(--border); border-collapse: collapse; }
+.pxl-table th { background: var(--border); color: white; font-family: 'Press Start 2P', monospace; border: 2px solid var(--border); }
+.pxl-table td { border: 2px solid var(--border-light); font-family: 'VT323', monospace; }
+.pxl-table tr:nth-child(even) { background: #F0EAF8; }
+.pxl-table tr:nth-child(odd) { background: var(--card); }
+.pxl-table tr:hover { background: #E8E0F0; }
+
+/* ─── Pixel Badge ─── */
+.pxl-badge {
+  font-family: 'Press Start 2P', monospace;
+  border: 2px solid var(--border);
+  display: inline-block;
+}
+
+/* ─── Pixel Chat Bubble ─── */
+.pxl-bubble {
+  border: 3px solid var(--border);
+  position: relative;
+}
+
+.pxl-bubble-mint { background: var(--mint); }
+.pxl-bubble-pink { background: var(--pink); }
+
+/* ─── Pixel Star ─── */
+.pxl-star-filled { color: var(--gold); }
+.pxl-star-empty { color: var(--border-light); }
+
+/* ─── Pixel creature sizes by tier ─── */
+.creature-kozo { width: 40px; height: 40px; font-size: 20px; }
+.creature-senpai { width: 52px; height: 52px; font-size: 28px; }
+.creature-tatsujin { width: 64px; height: 64px; font-size: 36px; }
+.creature-sensei { width: 80px; height: 80px; font-size: 48px; }
+
+/* ─── Activity log colors ─── */
+.log-success { color: var(--green); }
+.log-warning { color: var(--coral); }
+.log-info { color: var(--text-dim); }
+
+/* ─── Evolution path ─── */
+.evo-complete { opacity: 1; }
+.evo-current { opacity: 1; border: 3px solid var(--gold); box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
+.evo-locked { opacity: 0.4; }
+
+/* ─── Global ─── */
+html, body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'VT323', monospace;
+  image-rendering: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   min-height: 100vh;
 }
 
-/* ─── Scrollbar ─── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
-/* ─── Stagger Children ─── */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.stagger-children > * {
-  animation: fadeInUp 0.5s ease-out both;
-}
-.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 80ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 160ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 240ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 320ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 400ms; }
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border: 2px solid var(--bg); }
